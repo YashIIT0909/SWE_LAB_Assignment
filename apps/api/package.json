@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "prisma generate",
-    "postinstall": "prisma generate",
+    "build": "npx prisma generate",
+    "postinstall": "npx prisma generate",
     "typecheck": "tsc -p .",
     "test": "vitest run --coverage",
     "db:migrate": "prisma migrate dev",
