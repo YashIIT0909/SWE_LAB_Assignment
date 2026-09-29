@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { CategoryTree } from '@/components/category-tree'
+import { CategoryComponents } from '@/components/component-list'
 import { FormError } from '@/components/form-error'
 import { useCategory, useCategoryTree } from '@/lib/queries'
 
@@ -52,6 +53,7 @@ export default function BrowsePage() {
                 </ul>
               </div>
             )}
+            <CategoryComponents key={id} categoryId={category.data.id} />
           </>
         )}
       </section>

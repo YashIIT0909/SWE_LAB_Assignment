@@ -44,3 +44,67 @@ export const createNotationBody = z.object({
   kind: componentKind,
 })
 export type CreateNotationBody = z.infer<typeof createNotationBody>
+
+/** Trimmed, lowercased, de-duplicated keyword terms. */
+export const keywordTerms = (min: number, max: number) =>
+  z
+    .array(z.string().trim().toLowerCase().min(1).max(50))
+    .min(min)
+    .max(max)
+    .transform((terms) => [...new Set(terms)])
+
+const componentFields = {
+  name: z.string().trim().min(1).max(120),
+  description: z.string().trim().min(1).max(5000),
+  kind: componentKind,
+  notationId: z.string().min(1),
+  categoryId: z.string().min(1),
+  version: z.string().trim().min(1).max(50),
+  author: optionalText(100),
+  sourceUrl: z
+    .url({ protocol: /^https?$/ })
+    .max(2000)
+    .nullable()
+    .optional(),
+  content: z.string().max(100_000).nullable().optional(),
+}
+
+export const createComponentBody = z.object({
+  ...componentFields,
+  version: componentFields.version.default('1.0.0'),
+  keywords: keywordTerms(0, 50).default([]),
+})
+export type CreateComponentBody = z.output<typeof createComponentBody>
+
+export const updateComponentBody = z
+  .object(componentFields)
+  .partial()
+  .refine(atLeastOne, 'At least one field is required')
+export type UpdateComponentBody = z.output<typeof updateComponentBody>
+
+export const COMPONENT_SORTS = ['name', 'newest', 'mostUsed'] as const
+const boolParam = z
+  .enum(['true', 'false'])
+  .default('false')
+  .transform((v) => v === 'true')
+
+export const categoryComponentsQuery = pageQuery.extend({
+  includeDescendants: boolParam,
+  sort: z.enum(COMPONENT_SORTS).default('name'),
+})
+
+export const listComponentsQuery = categoryComponentsQuery.extend({
+  kind: componentKind.optional(),
+  notationId: z.string().min(1).optional(),
+  categoryId: z.string().min(1).optional(),
+  q: z.string().trim().min(1).max(100).optional(),
+})
+export type ListComponentsQuery = z.output<typeof listComponentsQuery>
+
+export const putKeywordsBody = z.object({ keywords: keywordTerms(0, 50) })
+export const addKeywordsBody = z.object({ keywords: keywordTerms(1, 50) })
+
+export const keywordSuggestQuery = z.object({
+  prefix: z.string().trim().toLowerCase().max(50).default(''),
+  limit: z.coerce.number().int().min(1).max(50).default(10),
+})

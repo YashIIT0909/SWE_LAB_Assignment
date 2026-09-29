@@ -104,3 +104,38 @@ export const AUDIT_ACTIONS = [
   'NOTATION_CREATE',
 ] as const
 export type AuditAction = (typeof AUDIT_ACTIONS)[number]
+
+export interface KeywordDto {
+  id: string
+  term: string
+}
+
+export interface ComponentSummary {
+  id: string
+  name: string
+  description: string
+  kind: ComponentKind
+  version: string
+  author: string | null
+  sourceUrl: string | null
+  notation: NotationDto
+  category: CategoryRef
+  keywords: KeywordDto[]
+  useCount: number
+  queryHitCount: number
+  queryHitNotUsedCount: number
+  lastUsedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ComponentDetail extends ComponentSummary {
+  content: string | null
+  createdBy: { id: string; name: string }
+  category: CategoryRef & { breadcrumb: CategoryRef[] }
+}
+
+export interface ComponentKeywords {
+  componentId: string
+  keywords: KeywordDto[]
+}
