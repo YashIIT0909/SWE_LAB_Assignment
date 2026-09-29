@@ -12,8 +12,30 @@ import { reportsRouter } from './routes/reports'
 import { searchRouter } from './routes/search'
 
 export const app = express()
-// WEB_ORIGIN may list several origins, comma separated
-app.use(cors({ origin: (process.env.WEB_ORIGIN ?? 'http://localhost:3000').split(',') }))
+
+const configuredOrigins = process.env.WEB_ORIGIN
+  ? process.env.WEB_ORIGIN.split(',').map((o) => o.trim())
+  : null
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true)
+      if (!configuredOrigins || configuredOrigins.includes('*')) {
+        return callback(null, true)
+      }
+      if (
+        configuredOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app') ||
+        origin.startsWith('http://localhost:')
+      ) {
+        return callback(null, true)
+      }
+      return callback(null, true)
+    },
+    credentials: true,
+  })
+)
 app.use(express.json({ limit: '1mb' }))
 app.use(authenticate)
 
@@ -29,5 +51,8 @@ api.use('/reports', reportsRouter)
 
 app.use('/api/v1', api)
 app.use('/v1', api)
+app.use('/api', api)
+app.use('/', api)
 app.use(notFoundRoute)
 app.use(errorHandler)
+
