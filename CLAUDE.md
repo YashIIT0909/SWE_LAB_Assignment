@@ -26,7 +26,8 @@ purge components nobody uses.
 
 ## Stack and layout
 
-npm workspaces, Node 20 LTS (`"engines": {"node": ">=20 <21"}`, `.nvmrc` = `20`).
+npm workspaces, Node 22 LTS (`"engines": {"node": ">=22"}`, `.nvmrc` = `22`; Node 20 is EOL and
+Vitest/Prisma 7 need 22+).
 
 ```
 apps/api        Express + TypeScript, zod, Prisma (PostgreSQL on Supabase), Vitest + Supertest
@@ -173,4 +174,17 @@ page, pageSize, total}`.
 
 ## Commands
 
-_To be filled in Phase 1._
+Run from the repo root unless noted. Local Postgres databases `sccs_dev` and `sccs_test`
+(URLs in `apps/api/.env`, copied from `.env.example`).
+
+```
+npm install                          # also runs prisma generate
+npm run dev                          # api :4000 and web :3000
+npm run lint | typecheck | test      # all workspaces
+npm run format:check                 # prettier
+npm run db:migrate -w @sccs/api      # prisma migrate dev (dev DB)
+npm run db:seed -w @sccs/api         # seed notations, cataloguer, demo tree
+npm run build -w @sccs/web
+```
+
+Integration tests run against `DATABASE_URL_TEST` (vitest overrides `DATABASE_URL` with it).

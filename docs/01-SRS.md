@@ -81,7 +81,7 @@ to the API only; the API is the only component that accesses the database.
 
 ### 2.4 Constraints
 
-- C-1 Stack: Next.js (App Router), Node.js 20 LTS, Express, TypeScript, Prisma, PostgreSQL on Supabase.
+- C-1 Stack: Next.js (App Router), Node.js 22 LTS, Express, TypeScript, Prisma, PostgreSQL on Supabase.
 - C-2 Hosting: Vercel (serverless) for web and API; Supabase free tier for the database (Postgres only; auth stays in the API).
 - C-3 API follows the conventions in `CLAUDE.md` (base path, error shape, pagination).
 - C-4 Registration creates only `USER` accounts; cataloguers are provisioned by seed.
@@ -144,7 +144,7 @@ Source column refers to the numbered sentences of the problem statement in secti
 | NFR-6 | Availability | Target 99% monthly availability (bounded by Vercel and Supabase free tiers); `/health` reports API and DB status. | T-01 |
 | NFR-7 | Maintainability | TypeScript strict, ESLint + Prettier clean, layered backend (Prisma only in services), >= 80% line coverage for services, CI runs lint, typecheck and tests on every push. | CI |
 | NFR-8 | Data integrity | Counter updates and cascading deletes are atomic (single transaction); counters never negative. | T-26, T-11 |
-| NFR-9 | Portability | Runs on Node 20 LTS; no OS-specific code; configuration only through env vars. | CI |
+| NFR-9 | Portability | Runs on Node 22 LTS; no OS-specific code; configuration only through env vars. | CI |
 
 ### 3.3 External interface requirements
 
@@ -162,7 +162,7 @@ Source column refers to the numbered sentences of the problem statement in secti
 
 - REST/JSON API under `/api/v1` as specified in `docs/05-api.md`.
 - PostgreSQL (Supabase) accessed through Prisma ORM.
-- Vercel runtime (Node 20) for both applications.
+- Vercel runtime (Node 22) for both applications.
 
 #### 3.3.3 Hardware interfaces
 
