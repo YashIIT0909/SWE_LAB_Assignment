@@ -30,3 +30,35 @@ export async function createUser(role: Role = 'USER', password = 'password123') 
   })
   return { user, token: sign(user), auth: { Authorization: `Bearer ${sign(user)}` } }
 }
+
+export function makeCategory(name: string, parentId: string | null = null) {
+  return prisma.category.create({ data: { name, slug: name.toLowerCase(), parentId } })
+}
+
+let c = 0
+export async function makeComponent(
+  data: { categoryId: string; notationId: string; createdById: string } & Partial<{
+    name: string
+    kind: 'DESIGN' | 'CODE'
+    keywords: string[]
+    useCount: number
+    queryHitNotUsedCount: number
+    lastUsedAt: Date | null
+    createdAt: Date
+  }>,
+) {
+  const { keywords = [], ...rest } = data
+  return prisma.component.create({
+    data: {
+      name: `Component ${++c}`,
+      description: 'test component',
+      kind: 'DESIGN',
+      ...rest,
+      keywords: {
+        create: keywords.map((term) => ({
+          keyword: { connectOrCreate: { where: { term }, create: { term } } },
+        })),
+      },
+    },
+  })
+}

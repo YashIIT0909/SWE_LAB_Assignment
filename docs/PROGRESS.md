@@ -5,7 +5,7 @@
 | 0 Docs | Done | SRS, use cases, analysis, design, API, test plan, project plan |
 | 1 Scaffold | Done | Workspaces, shared pkg, Express app + `/health` (T-01), Next.js shell showing API/DB status, ESLint/Prettier/Vitest, CI with Postgres service. Node 22 (20 is EOL). |
 | 2 Auth + schema | Done | Full Prisma schema + init migration, idempotent seed (10 notations, cataloguer from env, demo tree), register/login/me, `authenticate`/`requireLogin`/`requireRole`, shadcn/ui, login/register pages, role-aware nav, console guard. Tests T-02..T-05, T-44. |
-| 3 Categories + notations | Not started | |
+| 3 Categories + notations | Done | Tree with direct/total counts, detail with breadcrumb (recursive CTE), create/update/delete with duplicate, cycle and reassign rules, notations list/create, audit rows. Web: browse page with tree + breadcrumb, console category and notation managers. Tests T-14, T-15, T-28, T-29, T-31..T-33. |
 | 4 Components + keywords | Not started | |
 | 5 Search + usage | Not started | |
 | 6 Reports + purge | Not started | |

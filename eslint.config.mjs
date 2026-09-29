@@ -21,5 +21,12 @@ export default tseslint.config(
     rules: { ...next.configs.recommended.rules, ...next.configs['core-web-vitals'].rules },
     settings: { next: { rootDir: 'apps/web' } },
   },
-  { rules: { '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', ignoreRestSiblings: true }] } },
+  {
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', ignoreRestSiblings: true },
+      ],
+    },
+  },
 )
