@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import * as c from '../controllers/component.controller'
-import { requireCataloguer } from '../middleware/auth'
+import { use } from '../controllers/search.controller'
+import { requireCataloguer, requireLogin } from '../middleware/auth'
 
 export const componentsRouter = Router()
   .get('/', c.list)
@@ -11,3 +12,4 @@ export const componentsRouter = Router()
   .put('/:id/keywords', requireCataloguer, c.putKeywords)
   .post('/:id/keywords', requireCataloguer, c.addKeywords)
   .delete('/:id/keywords/:keywordId', requireCataloguer, c.removeKeyword)
+  .post('/:id/use', requireLogin, use)

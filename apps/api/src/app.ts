@@ -8,6 +8,7 @@ import { componentsRouter } from './routes/components'
 import { healthRouter } from './routes/health'
 import { keywordsRouter } from './routes/keywords'
 import { notationsRouter } from './routes/notations'
+import { searchRouter } from './routes/search'
 
 export const app = express()
 // WEB_ORIGIN may list several origins, comma separated
@@ -22,6 +23,7 @@ api.use('/categories', categoriesRouter)
 api.use('/notations', notationsRouter)
 api.use('/components', componentsRouter)
 api.use('/keywords', keywordsRouter)
+api.use('/search', searchRouter)
 
 app.use('/api/v1', api)
 app.use(notFoundRoute)

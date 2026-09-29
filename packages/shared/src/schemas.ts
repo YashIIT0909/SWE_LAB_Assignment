@@ -108,3 +108,15 @@ export const keywordSuggestQuery = z.object({
   prefix: z.string().trim().toLowerCase().max(50).default(''),
   limit: z.coerce.number().int().min(1).max(50).default(10),
 })
+
+export const searchBody = pageQuery.extend({
+  keywords: keywordTerms(1, 10),
+  match: z.enum(['any', 'all']),
+  kind: componentKind.optional(),
+  notationId: z.string().min(1).optional(),
+  categoryId: z.string().min(1).optional(),
+  includeDescendants: z.boolean().default(false),
+})
+export type SearchBody = z.output<typeof searchBody>
+
+export const useBody = z.object({ queryId: z.string().min(1).optional() })

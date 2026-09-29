@@ -139,3 +139,21 @@ export interface ComponentKeywords {
   componentId: string
   keywords: KeywordDto[]
 }
+
+export interface SearchItem extends ComponentSummary {
+  matchedKeywords: string[]
+  score: number
+}
+
+export interface SearchResponse extends Page<SearchItem> {
+  queryId: string
+}
+
+export interface UseResult {
+  componentId: string
+  useCount: number
+  queryHitCount: number
+  queryHitNotUsedCount: number
+  lastUsedAt: string
+  countedQueryHit: boolean
+}

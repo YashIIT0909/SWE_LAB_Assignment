@@ -1,9 +1,11 @@
 'use client'
 import Link from 'next/link'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { DeleteComponentButton } from '@/components/delete-component-button'
 import { FormError } from '@/components/form-error'
+import { UseButton } from '@/components/use-button'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth'
@@ -11,8 +13,9 @@ import { useComponent } from '@/lib/queries'
 
 const fmt = (d: string | null) => (d ? new Date(d).toLocaleString() : 'never')
 
-export default function ComponentPage() {
+function ComponentPage() {
   const { id } = useParams<{ id: string }>()
+  const queryId = useSearchParams().get('queryId') ?? undefined
   const router = useRouter()
   const { user } = useAuth()
   const { data: c, error, isPending } = useComponent(id)
@@ -30,6 +33,8 @@ export default function ComponentPage() {
         </div>
         <p className="text-muted-foreground">{c.description}</p>
       </header>
+
+      <UseButton componentId={c.id} queryId={queryId} />
 
       {user?.role === 'CATALOGUER' && (
         <div className="flex gap-2">
@@ -88,5 +93,13 @@ export default function ComponentPage() {
         </section>
       )}
     </article>
+  )
+}
+
+export default function Page() {
+  return (
+    <Suspense>
+      <ComponentPage />
+    </Suspense>
   )
 }
