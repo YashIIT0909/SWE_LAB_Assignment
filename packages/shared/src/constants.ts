@@ -22,3 +22,33 @@ export interface HealthResponse {
   db: 'ok' | 'down'
   time: string
 }
+
+export type Role = 'CATALOGUER' | 'USER'
+export type ComponentKind = 'DESIGN' | 'CODE'
+
+export interface UserDto {
+  id: string
+  name: string
+  email: string
+  role: Role
+  createdAt: string
+}
+
+export interface AuthResult {
+  token: string
+  user: UserDto
+}
+
+export interface Page<T> {
+  items: T[]
+  page: number
+  pageSize: number
+  total: number
+}
+
+export const slugify = (name: string) =>
+  name
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'category'

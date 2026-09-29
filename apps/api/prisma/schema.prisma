@@ -6,3 +6,147 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum Role {
+  CATALOGUER
+  USER
+}
+
+enum ComponentKind {
+  DESIGN
+  CODE
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String
+  email        String        @unique
+  passwordHash String
+  role         Role          @default(USER)
+  createdAt    DateTime      @default(now())
+  components   Component[]
+  searches     SearchQuery[]
+  usageEvents  UsageEvent[]
+  auditLogs    AuditLog[]
+}
+
+model Category {
+  id          String      @id @default(cuid())
+  name        String
+  slug        String
+  description String?
+  parentId    String?
+  parent      Category?   @relation("children", fields: [parentId], references: [id])
+  children    Category[]  @relation("children")
+  components  Component[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([parentId, name])
+}
+
+model Notation {
+  id         String        @id @default(cuid())
+  name       String        @unique
+  kind       ComponentKind
+  components Component[]
+}
+
+model Component {
+  id                   String             @id @default(cuid())
+  name                 String
+  description          String
+  kind                 ComponentKind
+  notationId           String
+  notation             Notation           @relation(fields: [notationId], references: [id])
+  categoryId           String
+  category             Category           @relation(fields: [categoryId], references: [id])
+  version              String             @default("1.0.0")
+  author               String?
+  sourceUrl            String?
+  content              String?            @db.Text
+  createdById          String
+  createdBy            User               @relation(fields: [createdById], references: [id])
+  useCount             Int                @default(0)
+  queryHitCount        Int                @default(0)
+  queryHitNotUsedCount Int                @default(0)
+  lastUsedAt           DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  keywords             ComponentKeyword[]
+  searchResults        SearchResult[]
+  usageEvents          UsageEvent[]
+
+  @@index([categoryId])
+  @@index([notationId])
+  @@index([kind])
+}
+
+model Keyword {
+  id         String             @id @default(cuid())
+  term       String             @unique
+  components ComponentKeyword[]
+
+  // prefix LIKE 'abc%' needs pattern ops unless the DB collation is C
+  @@index([term(ops: raw("text_pattern_ops"))])
+}
+
+model ComponentKeyword {
+  componentId String
+  keywordId   String
+  component   Component @relation(fields: [componentId], references: [id], onDelete: Cascade)
+  keyword     Keyword   @relation(fields: [keywordId], references: [id])
+
+  @@id([componentId, keywordId])
+  @@index([keywordId])
+}
+
+model SearchQuery {
+  id          String         @id @default(cuid())
+  userId      String?
+  user        User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  terms       String[]
+  filters     Json
+  resultCount Int
+  createdAt   DateTime       @default(now())
+  results     SearchResult[]
+  usageEvents UsageEvent[]
+}
+
+model SearchResult {
+  queryId     String
+  componentId String
+  rank        Int
+  used        Boolean     @default(false)
+  query       SearchQuery @relation(fields: [queryId], references: [id], onDelete: Cascade)
+  component   Component   @relation(fields: [componentId], references: [id], onDelete: Cascade)
+
+  @@id([queryId, componentId])
+  @@index([componentId])
+}
+
+model UsageEvent {
+  id          String       @id @default(cuid())
+  componentId String
+  component   Component    @relation(fields: [componentId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  queryId     String?
+  query       SearchQuery? @relation(fields: [queryId], references: [id], onDelete: SetNull)
+  createdAt   DateTime     @default(now())
+
+  @@index([componentId])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  actor      User     @relation(fields: [actorId], references: [id])
+  action     String
+  entityType String
+  entityId   String
+  details    Json?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+}
