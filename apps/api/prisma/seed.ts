@@ -39,10 +39,11 @@ async function main() {
     for (const child of children) await category(child, r.id)
   }
 
-  if ((await prisma.component.count()) === 0) {
-    const notations = new Map((await prisma.notation.findMany()).map((n) => [n.name, n.id]))
-    const cats = new Map((await prisma.category.findMany()).map((c) => [c.name, c.id]))
-    for (const [name, kind, notation, cat, keywords, description] of DEMO_COMPONENTS)
+  const notations = new Map((await prisma.notation.findMany()).map((n) => [n.name, n.id]))
+  const cats = new Map((await prisma.category.findMany()).map((c) => [c.name, c.id]))
+  for (const [name, kind, notation, cat, keywords, description] of DEMO_COMPONENTS) {
+    const existing = await prisma.component.findFirst({ where: { name } })
+    if (!existing) {
       await prisma.component.create({
         data: {
           name,
@@ -54,6 +55,7 @@ async function main() {
           keywords: { create: linkKeywords([...keywords]) },
         },
       })
+    }
   }
   console.log('Seed complete')
 }

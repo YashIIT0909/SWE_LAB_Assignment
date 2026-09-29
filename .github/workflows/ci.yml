@@ -30,3 +30,7 @@ jobs:
         working-directory: apps/api
       - run: npm test
       - run: npm run build -w @sccs/web
+      - run: npx prisma db seed
+        working-directory: apps/api
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e

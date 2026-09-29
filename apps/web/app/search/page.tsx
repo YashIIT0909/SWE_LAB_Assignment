@@ -163,6 +163,9 @@ function SearchPage() {
           <h2 className="font-medium" role="status">
             {res.total} {res.total === 1 ? 'component' : 'components'} found
           </h2>
+          {res.total === 0 && (
+            <p className="text-muted-foreground">No components match your query.</p>
+          )}
           {res.items.map((c) => (
             <ComponentCard
               key={c.id}

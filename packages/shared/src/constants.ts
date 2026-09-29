@@ -9,6 +9,7 @@ export const ERROR_CODES = [
   'CATEGORY_NOT_EMPTY',
   'CATEGORY_CYCLE',
   'NOTATION_KIND_MISMATCH',
+  'RATE_LIMITED',
   'INTERNAL_ERROR',
 ] as const
 export type ErrorCode = (typeof ERROR_CODES)[number]

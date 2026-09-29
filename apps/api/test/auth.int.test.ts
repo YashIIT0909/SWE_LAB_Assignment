@@ -101,4 +101,20 @@ describe('auth', () => {
     expect(res.status).toBe(400)
     expect(res.body.error.code).toBe('VALIDATION_ERROR')
   })
+
+  it('rate limits auth routes when enabled', async () => {
+    for (let i = 0; i < 20; i++) {
+      await request(app)
+        .post('/api/v1/auth/login')
+        .set('x-test-rate-limit', 'true')
+        .send({ email: 'rate@example.com', password: 'password123' })
+    }
+    const blocked = await request(app)
+      .post('/api/v1/auth/login')
+      .set('x-test-rate-limit', 'true')
+      .send({ email: 'rate@example.com', password: 'password123' })
+    expect(blocked.status).toBe(429)
+    expect(blocked.body.error.code).toBe('RATE_LIMITED')
+    expect(blocked.headers).toHaveProperty('retry-after')
+  })
 })
