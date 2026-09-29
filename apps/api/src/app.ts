@@ -34,7 +34,7 @@ app.use(
       return callback(null, true)
     },
     credentials: true,
-  })
+  }),
 )
 app.use(express.json({ limit: '1mb' }))
 app.use(authenticate)
@@ -55,4 +55,3 @@ app.use('/api', api)
 app.use('/', api)
 app.use(notFoundRoute)
 app.use(errorHandler)
-

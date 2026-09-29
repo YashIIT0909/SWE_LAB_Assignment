@@ -11,6 +11,8 @@ export default tseslint.config(
       '**/coverage',
       'apps/api/src/generated',
       '**/next-env.d.ts',
+      'apps/api/api',
+      'apps/api/build.js',
     ],
   },
   js.configs.recommended,
