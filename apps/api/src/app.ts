@@ -28,5 +28,6 @@ api.use('/search', searchRouter)
 api.use('/reports', reportsRouter)
 
 app.use('/api/v1', api)
+app.use('/v1', api)
 app.use(notFoundRoute)
 app.use(errorHandler)

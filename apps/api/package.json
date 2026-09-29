@@ -20,7 +20,6 @@
     "@types/node": "^22.20.4",
     "@types/supertest": "^7.2.1",
     "@vitest/coverage-v8": "^4.1.11",
-    "prisma": "^7.10.0",
     "supertest": "^7.3.0",
     "tsx": "^4.23.15",
     "vitest": "^4.1.11"
@@ -34,6 +33,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
+    "prisma": "^7.10.0",
     "zod": "^4.6.5"
   }
 }
