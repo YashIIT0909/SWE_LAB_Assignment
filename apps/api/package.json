@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "build": "prisma generate",
     "postinstall": "prisma generate",
     "typecheck": "tsc -p .",
     "test": "vitest run --coverage",
