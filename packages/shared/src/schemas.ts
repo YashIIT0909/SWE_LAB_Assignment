@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { AUDIT_ACTIONS } from './constants'
 
 export const ROLES = ['CATALOGUER', 'USER'] as const
 export const COMPONENT_KINDS = ['DESIGN', 'CODE'] as const
@@ -120,3 +121,24 @@ export const searchBody = pageQuery.extend({
 export type SearchBody = z.output<typeof searchBody>
 
 export const useBody = z.object({ queryId: z.string().min(1).optional() })
+
+const nonNegInt = (d: number) => z.coerce.number().int().min(0).max(1_000_000).default(d)
+export const purgeParams = z.object({
+  maxUses: nonNegInt(0),
+  minNotUsedHits: nonNegInt(0),
+  unusedForDays: nonNegInt(90),
+  olderThanDays: nonNegInt(30),
+})
+export type PurgeParams = z.output<typeof purgeParams>
+
+export const purgeCandidatesQuery = pageQuery.extend(purgeParams.shape)
+
+export const purgeBody = z.object({
+  componentIds: z.array(z.string().min(1)).min(1).max(100),
+  params: purgeParams.prefault({}),
+})
+
+export const auditQuery = pageQuery.extend({
+  action: z.enum(AUDIT_ACTIONS).optional(),
+  entityType: z.enum(['Component', 'Category', 'Notation']).optional(),
+})

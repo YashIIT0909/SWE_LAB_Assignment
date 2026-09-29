@@ -1,7 +1,14 @@
 import Link from 'next/link'
 import { RequireRole } from '@/components/require-role'
 
-const links = [['/console', 'Overview']] as const
+const links = [
+  ['/console', 'Reports'],
+  ['/console/categories', 'Categories'],
+  ['/console/notations', 'Notations'],
+  ['/console/components', 'Components'],
+  ['/console/purge', 'Purge'],
+  ['/console/audit', 'Audit'],
+] as const
 
 export default function ConsoleLayout({ children }: { children: React.ReactNode }) {
   return (

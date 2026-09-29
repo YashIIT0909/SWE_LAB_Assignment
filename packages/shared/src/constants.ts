@@ -157,3 +157,45 @@ export interface UseResult {
   lastUsedAt: string
   countedQueryHit: boolean
 }
+
+export interface ReportSummary {
+  totals: {
+    components: number
+    design: number
+    code: number
+    categories: number
+    keywords: number
+    searches: number
+    uses: number
+  }
+  byNotation: { notationId: string; name: string; kind: ComponentKind; components: number }[]
+  topUsed: { id: string; name: string; useCount: number }[]
+  topNotUsed: { id: string; name: string; queryHitNotUsedCount: number; useCount: number }[]
+  neverUsedCount: number
+}
+
+export interface PurgeCandidate {
+  id: string
+  name: string
+  kind: ComponentKind
+  useCount: number
+  queryHitCount: number
+  queryHitNotUsedCount: number
+  lastUsedAt: string | null
+  createdAt: string
+}
+
+export interface PurgeResult {
+  deleted: string[]
+  skipped: { id: string; reason: 'NOT_FOUND' | 'NO_LONGER_CANDIDATE' }[]
+}
+
+export interface AuditEntry {
+  id: string
+  actor: { id: string; name: string }
+  action: AuditAction
+  entityType: string
+  entityId: string
+  details: unknown
+  createdAt: string
+}

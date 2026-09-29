@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { createComponentBody, keywordTerms, listComponentsQuery, pageQuery } from './schemas'
+import {
+  auditQuery,
+  createComponentBody,
+  keywordTerms,
+  listComponentsQuery,
+  pageQuery,
+  purgeBody,
+  purgeParams,
+} from './schemas'
 
 describe('shared schemas', () => {
   it('T-12 keyword terms are trimmed, lowercased and de-duplicated', () => {
@@ -30,5 +38,19 @@ describe('shared schemas', () => {
     expect(listComponentsQuery.parse({ includeDescendants: 'true' }).includeDescendants).toBe(true)
     expect(listComponentsQuery.parse({}).includeDescendants).toBe(false)
     expect(listComponentsQuery.safeParse({ includeDescendants: 'yes' }).success).toBe(false)
+  })
+
+  it('purge and audit schemas validate inputs', () => {
+    expect(purgeParams.parse({})).toEqual({
+      maxUses: 0,
+      minNotUsedHits: 0,
+      unusedForDays: 90,
+      olderThanDays: 30,
+    })
+    expect(purgeParams.safeParse({ maxUses: -1 }).success).toBe(false)
+    expect(purgeBody.safeParse({ componentIds: [] }).success).toBe(false)
+    expect(purgeBody.safeParse({ componentIds: ['id1'] }).success).toBe(true)
+    expect(auditQuery.safeParse({ action: 'INVALID' }).success).toBe(false)
+    expect(auditQuery.safeParse({ action: 'COMPONENT_CREATE' }).success).toBe(true)
   })
 })

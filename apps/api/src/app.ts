@@ -8,6 +8,7 @@ import { componentsRouter } from './routes/components'
 import { healthRouter } from './routes/health'
 import { keywordsRouter } from './routes/keywords'
 import { notationsRouter } from './routes/notations'
+import { reportsRouter } from './routes/reports'
 import { searchRouter } from './routes/search'
 
 export const app = express()
@@ -24,6 +25,7 @@ api.use('/notations', notationsRouter)
 api.use('/components', componentsRouter)
 api.use('/keywords', keywordsRouter)
 api.use('/search', searchRouter)
+api.use('/reports', reportsRouter)
 
 app.use('/api/v1', api)
 app.use(notFoundRoute)
