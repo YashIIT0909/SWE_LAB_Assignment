@@ -75,7 +75,6 @@ packages/shared zod schemas and TS types used by both api and web (+ unit tests)
 docs/           SRS, use cases, analysis, design, API, test plan, project plan, report, PROGRESS.md,
                 ASSIGNMENT_CONTEXT.md, STATUS.md, CHANGELOG_MINE.md, README.md (index of all docs),
                 diagrams/ (PlantUML sources and PNG/SVG of the UML diagrams)
-ppt/            bundle for rebuilding the presentation (instructions, old deck, context copies, images)
 ```
 
 Deployment: both apps on Vercel (web as a Next.js project, api as an Express serverless

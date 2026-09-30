@@ -1,23 +1,43 @@
-# PPT_Modify.md: how to update the SCCS presentation
+# PPT_Modify.md: rebuild the SCCS presentation
 
-For the assistant that edits the deck. Attach `Software_Component_Cataloguing_System.pptx` together
-with this file. The deck was written before the system was finished, and it contradicts the real system
-in many places. This file says what is wrong, what every slide must say instead, the new look, and
-which images will be added by hand.
+You are given a complete package (this folder). Your job: produce a corrected, redesigned version of
+the presentation and save it as `Software_Component_Cataloguing_System_v2.pptx`.
+
+The old deck was written before the system was finished and contradicts the real system in many
+places. This file says what is wrong, what every slide must say instead, the new look, and where every
+picture is. Read section 0 first.
+
+## Package contents
+
+```
+PPT_Modify.md                                   this file (the instructions)
+Software_Component_Cataloguing_System.pptx      the OLD deck (11 slides): read it, do not reuse its claims
+context/                                        background documents, read-only
+  CLAUDE.md                                     summary of the whole system
+  00-problem-statement.md   01-SRS.md   02-use-cases.md   03-structured-analysis.md
+  04-design.md   06-test-plan.md   08-report.md
+images/
+  diagrams/      8 diagrams, each as PNG (for slides) and SVG: use-case, class-domain, class-backend,
+                 seq-add, seq-search, seq-use, dfd-level0, dfd-level1
+  screenshots/   7 screenshots of the running website
+  ai-generated/  optional illustrations made by the owner (may be empty; see section 7)
+```
 
 ## 0. Ground rules (read first)
 
-1. **Facts come only from section 1 of this file.** Do not invent numbers, features, versions or
-   technologies. If a slide needs a fact that is not here, leave a visible `[TODO: ...]` marker and list it
-   in your final message.
-2. **Images are added by the owner, by hand.** Do not generate pictures. Wherever section 6 or 7 lists an
-   image, put a placeholder frame of the stated size: a rounded rectangle, light fill, dashed border,
-   with the text `INSERT: <file name>` centred inside. The owner replaces it later. Use PowerPoint
-   shapes, not fake pictures.
+1. **Facts come only from section 1 of this file** (and the `context/` documents). Do not invent numbers,
+   features, versions or technologies. If a slide needs a fact that is not there, leave a visible
+   `[TODO: ...]` marker and list it in your final message.
+2. **Use the provided images.** Insert every picture named in section 5 from `images/`. Keep each
+   picture's **aspect ratio (never stretch)** and fit it inside the box given. Use the PNG. The
+   diagram PNGs have a white background: put them on a white rounded card with a thin `CFE0E0`
+   border. Give screenshots the same rounded frame. If a file in `images/ai-generated/` exists, use it
+   as described in section 7; if it does not, design the slide so it looks complete without it. **Never
+   generate or draw a substitute picture**, and never leave an empty placeholder frame in the final deck.
 3. **Keep 16:9, 13.333 in x 7.5 in.** Keep at least 0.5 in margin. No text may overflow or be cut off.
-4. **Editing approach:** the current deck has no images and every element is a loose text box or shape
-   (named `Text 0`, `Text 1`, ...). Rebuilding each slide from scratch in the new design is easier and
-   cleaner than editing the old shapes. Keep the slide order and count from section 3.
+4. **Editing approach:** the old deck has no pictures and every element is a loose text box or shape
+   (named `Text 0`, `Text 1`, ...). Building each slide from scratch in the new design is easier and
+   cleaner than editing the old shapes. Keep the slide order from section 3.
 5. **Speaker notes:** add two or three plain sentences to every slide (the owner has a viva and needs
    something to say). Use the "Notes" lines in section 5 as the base.
 6. **When finished,** reply with: the list of slides changed, every `[TODO]` you left, every place you
@@ -31,10 +51,11 @@ TypeScript). Components have keywords, sit in a hierarchical category tree, and 
 search or by browsing. The system counts how often each component is used, and how often it shows up in
 a search without being used, so a cataloguer can purge unused components.
 
-**Course and project.** Software Engineering, Assignment 8 (problem: Software Component Cataloguing),
-IIT (ISM) Dhanbad, September 2026. Deadline 1 October 2026. Deliverables: SRS (functional and
-non-functional requirements), UML use case and class diagrams, this PPT, and the working website.
-The team project was taken over and completed by one maintainer.
+**Course and team.** Software Engineering Lab, Assignment 8 (problem: Software Component
+Cataloguing), IIT (ISM) Dhanbad, September 2026. Team: **Dinesh Krishna, Sankar, Vishesh, Sai Teja,
+Yash Agarwal, Yash Patidar**. Repository: https://github.com/YashIIT0909/SWE_LAB_Assignment.
+Deliverables: SRS (functional and non-functional requirements), UML use case and class diagrams,
+this PPT, and the working website.
 
 **Actors.** Visitor (not logged in): browse, view, search. User: also marks a component as used
 (needs login). Cataloguer: also maintains components, keywords, categories and notations, views reports
@@ -55,6 +76,7 @@ times used, then name. Each result shows its matched keywords and score. There i
 no synonym handling.
 
 **Counters** (per component): `useCount`, `queryHitCount`, `queryHitNotUsedCount`, `lastUsedAt`.
+
 - A search adds 1 to `queryHitCount` and `queryHitNotUsedCount` for each component on the **returned
   page** only. The search and its counters are saved in one database transaction.
 - "Use this component" (login needed) adds 1 to `useCount`, sets `lastUsedAt`, and records a usage event.
@@ -80,7 +102,7 @@ Playwright 1.63 with axe-core. Tooling: ESLint, Prettier, GitHub Actions CI, npm
 (`apps/web`, `apps/api`, `packages/shared`).
 
 **Requirements.** 27 functional requirements (FR-1 to FR-27) and 11 non-functional (NFR-1 to NFR-11),
-in `docs/01-SRS.md`. Their content is in slides 3 and 4 below.
+in `context/01-SRS.md`. Their content is in slides 3 and 4 below.
 
 **Testing (exact numbers, last run 30 Sep 2026).** 5 unit tests (shared package) + 56 unit and
 integration tests (API, Vitest + Supertest against a real PostgreSQL test database) = **61**, all passing.
@@ -88,7 +110,7 @@ integration tests (API, Vitest + Supertest against a real PostgreSQL test databa
 accessibility scans, 1 keyboard-only search), all passing. Line coverage of the API **98.31%**
 (services 99.61%; thresholds 70% and 80%). GitHub Actions CI is green (lint, format check, type check,
 migrate, tests, web build, seed, end-to-end). 48 numbered test cases (T-01 to T-48) traced to
-requirements in `docs/06-test-plan.md` and `docs/08-report.md`. Techniques: equivalence classes and
+requirements in `context/06-test-plan.md` and `context/08-report.md`. Techniques: equivalence classes and
 boundary values (search keywords 0/1/10/11, term length 0/1/50/51, page size 0/1/50/51, purge thresholds
 exactly at the boundary), branch coverage on the ranking and use logic, a forced failure inside a
 transaction (nothing is half-written), role checks, bcrypt check, JWT-secret check, rate-limit check.
@@ -100,65 +122,67 @@ ranking function in memory (10,000 components, 5,000 keywords, 200 searches, 95t
 
 ## 2. What is wrong in the current deck
 
-| Slide | Problem | Severity |
-|---|---|---|
-| 1 | "APPROVED" stamp, "INDEX ID CATALOGUE-CORE-2025", "SPEC 4.02 // ARCHIVE" are invented; year is wrong; "Multi-Facet Inverted Keyword Index" is not what was built; no name, course or date. | High |
-| 2 | Lists 3 languages only (system has 6); the example path `/Root/Security/Authentication/Design/UML/Tokens` puts the notation inside the category path, which is not how it works; claims about lookup speed are not measured. | Medium |
-| 3 | Wrong actors ("Catalogue User" is read-only); says purge is an **automated daemon**; "Maintain usage metrics" drawn as a use case; hand-drawn diagram, not UML. | High |
-| 4 | Class model is invented: `UsageStatistic`, `ReuseInfo`, `Query`, abstract `User` with two subclasses, `Keyword.weight` do not exist. Multiplicities are wrong. | High |
-| 5 | Has a `:ComponentRepo` layer (there is none); keywords attached in a separate step (they are saved with the component in one transaction); claims counters are updated **asynchronously** (they are synchronous, in the same transaction). | High |
-| 6 | DFD has 5 processes and 4 stores; the project's own DFD has 7 processes and 8 stores (section 5, slide A2). | Medium |
-| 7 | "Scheduled daemon / cron: purgeUnused()" is false; "fuzzy keyword queries" is false; "checkout event" is not how use works; "engine maps into the tree ... inheritance" is invented; "file packages" (components store text content and a source URL). | High |
-| 8 | Entire stack is wrong: Spring Boot, Java 17, Maven, Docker, JUnit, React 18.2, Node 20, Alpine are not used. | High |
-| 9 | Claims that are not implemented or tested: trees deeper than 12 levels, offline cache recovery, cursor paging, concurrent-purge races, fault-injection suites. | High |
-| 10 | Screen list does not match the site (no "Dashboard" with growth rates, no "export specs", no "copy code"); real screens differ. | Medium |
-| 11 | "Distributed fallacies" mitigations are mostly not implemented (retries with circuit breaker, keyset pagination, async aggregations, micro-endpoints). Limitations are incomplete. | High |
-| all | No requirements (FR/NFR) slide, no demo screenshots, no architecture diagram, no real test numbers. | High |
+| Slide | Problem                                                                                                                                                                                                                                                | Severity |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| 1     | "APPROVED" stamp, "INDEX ID CATALOGUE-CORE-2025", "SPEC 4.02 // ARCHIVE" are invented; year is wrong; "Multi-Facet Inverted Keyword Index" is not what was built; no team, course or date.                                                             | High     |
+| 2     | Lists 3 languages only (system has 6); the example path `/Root/Security/Authentication/Design/UML/Tokens` puts the notation inside the category path, which is not how it works; claims about lookup speed are not measured.                           | Medium   |
+| 3     | Wrong actors ("Catalogue User" is read-only); says purge is an **automated daemon**; "Maintain usage metrics" drawn as a use case; hand-drawn diagram, not UML.                                                                                        | High     |
+| 4     | Class model is invented: `UsageStatistic`, `ReuseInfo`, `Query`, abstract `User` with two subclasses, `Keyword.weight` do not exist. Multiplicities are wrong.                                                                                         | High     |
+| 5     | Has a `:ComponentRepo` layer (there is none); keywords attached in a separate step (they are saved with the component in one transaction); claims counters are updated **asynchronously** (they are synchronous, in the same transaction).             | High     |
+| 6     | DFD has 5 processes and 4 stores; the project's own DFD has 7 processes and 8 stores (provided as images).                                                                                                                                             | Medium   |
+| 7     | "Scheduled daemon / cron: purgeUnused()" is false; "fuzzy keyword queries" is false; "checkout event" is not how use works; "engine maps into the tree ... inheritance" is invented; "file packages" (components store text content and a source URL). | High     |
+| 8     | Entire stack is wrong: Spring Boot, Java 17, Maven, Docker, JUnit, React 18.2, Node 20, Alpine are not used.                                                                                                                                           | High     |
+| 9     | Claims that are not implemented or tested: trees deeper than 12 levels, offline cache recovery, cursor paging, concurrent-purge races, fault-injection suites.                                                                                         | High     |
+| 10    | Screen list does not match the site (no "Dashboard" with growth rates, no "export specs", no "copy code"); real screens differ.                                                                                                                        | Medium   |
+| 11    | "Distributed fallacies" mitigations are mostly not implemented (retries with circuit breaker, keyset pagination, async aggregations, micro-endpoints). Limitations are incomplete.                                                                     | High     |
+| all   | No requirements (FR/NFR) slide, no demo screenshots, no architecture diagram, no real test numbers.                                                                                                                                                    | High     |
 
 ## 3. New slide list
 
-The deck goes from 11 to 16 main slides plus 2 appendix slides.
+The deck goes from 11 to 16 main slides plus 4 appendix slides.
 
-| # | Slide | Based on old slide |
-|---|---|---|
-| 1 | Title | 1 |
-| 2 | Problem and scope | 2 |
-| 3 | Functional requirements | new |
-| 4 | Non-functional requirements | new |
-| 5 | Use case model | 3 |
-| 6 | Domain class model | 4 |
-| 7 | Architecture | new |
-| 8 | Technology stack | 8 |
-| 9 | How it works | 7 |
-| 10 | Sequence diagrams | 5 |
-| 11 | Screens and roles | 10 |
-| 12 | Demo: visitor and user | new |
-| 13 | Demo: cataloguer console | new |
-| 14 | Testing and verification | 9 |
-| 15 | Limitations and future work | 11 |
-| 16 | Thank you / questions | new |
-| A1 | Appendix: backend class diagram | new |
-| A2 | Appendix: data flow diagrams | 6 |
+| #   | Slide                                       | Based on old slide |
+| --- | ------------------------------------------- | ------------------ |
+| 1   | Title                                       | 1                  |
+| 2   | Problem and scope                           | 2                  |
+| 3   | Functional requirements                     | new                |
+| 4   | Non-functional requirements                 | new                |
+| 5   | Use case model                              | 3                  |
+| 6   | Domain class model                          | 4                  |
+| 7   | Architecture                                | new                |
+| 8   | Technology stack                            | 8                  |
+| 9   | How it works                                | 7                  |
+| 10  | Sequence diagrams: search, then use         | 5                  |
+| 11  | Screens and roles                           | 10                 |
+| 12  | Demo: visitor and user                      | new                |
+| 13  | Demo: cataloguer console                    | new                |
+| 14  | Testing and verification                    | 9                  |
+| 15  | Limitations and future work                 | 11                 |
+| 16  | Thank you / questions                       | new                |
+| A1  | Appendix: backend class diagram             | new                |
+| A2  | Appendix: sequence diagram, add a component | 5                  |
+| A3  | Appendix: data flow, context level          | 6                  |
+| A4  | Appendix: data flow, level 1                | 6                  |
 
-Delete the old "Integration Fallacies" slide content. If the course requires that framing, ask the
-owner; do not keep any mitigation that section 8 forbids.
+Delete the old "Integration Fallacies" slide content. Do not keep any mitigation that section 8 forbids.
 
 ## 4. New design
 
-The old look (orange `FF5A0F` accent, uppercase Courier labels, "spec sheet" style) goes away.
+The old look (orange `FF5A0F` accent, uppercase Courier labels, "spec sheet" style) goes away. The
+diagram images were already drawn in the new palette below, so the deck and the pictures match.
 
 **Palette** (hex, no `#` in code). One dominant colour, one sharp accent.
 
-| Role | Hex | Use |
-|---|---|---|
+| Role      | Hex      | Use                                                                   |
+| --------- | -------- | --------------------------------------------------------------------- |
 | Deep teal | `0B3C49` | Dominant. Backgrounds of slides 1, 16 and section headers; dark cards |
-| Teal | `1F7A8C` | Secondary. Icons, chart bars, table headers, links |
-| Mist | `E8F3F2` | Card and panel fill on light slides |
-| White | `FFFFFF` | Background of content slides |
-| Amber | `F4A62A` | The one accent: key numbers, badges, highlights. Use sparingly |
-| Ink | `10262B` | Body text on light backgrounds |
-| Muted | `5A7177` | Captions and secondary text |
-| Line | `CFE0E0` | Thin borders, table lines |
+| Teal      | `1F7A8C` | Secondary. Icons, chart bars, table headers, links                    |
+| Mist      | `E8F3F2` | Card and panel fill on light slides                                   |
+| White     | `FFFFFF` | Background of content slides                                          |
+| Amber     | `F4A62A` | The one accent: key numbers, badges, highlights. Use sparingly        |
+| Ink       | `10262B` | Body text on light backgrounds                                        |
+| Muted     | `5A7177` | Captions and secondary text                                           |
+| Line      | `CFE0E0` | Thin borders, table lines                                             |
 
 Dark slides (1, 16): deep teal background, white text, amber accent. Content slides: white background,
 ink text, mist cards. Keep contrast high: never amber text on white, never muted text on teal.
@@ -169,7 +193,7 @@ code tokens (`POST /search`) **Courier New** 13 pt.
 
 **Motif (repeat on every content slide):** rounded-rectangle cards (corner radius about 0.12 in, mist
 fill, very soft shadow) and a small icon in a teal circle at the start of each card heading. Numbered
-steps use amber circles with dark text.
+steps use amber circles with dark text. Pictures sit in rounded frames (see rule 2).
 
 **Do not use:** accent lines under titles, coloured bars or stripes along slide or card edges, centred
 body paragraphs, the same layout on consecutive slides, text-only slides. Left-align text. Titles are
@@ -182,7 +206,8 @@ on content slides only.
 
 ## 5. Slide-by-slide content
 
-Text in quotes is final wording. `[IMG ...]` is an image frame to leave empty (section 6 and 7).
+Text in quotes is final wording. `[PIC file]` means: insert that image (section 6), fitted inside the
+box stated, aspect ratio kept.
 
 ### Slide 1. Title (dark)
 
@@ -191,13 +216,14 @@ Text in quotes is final wording. `[IMG ...]` is an image frame to leave empty (s
   purge the ones nobody uses."
 - Three fact chips: "10 notations: 4 design, 6 code" / "Keyword search with ranking" / "Usage counters and
   purge".
-- Meta: "Software Engineering · Assignment 8 · IIT (ISM) Dhanbad · September 2026"
-- Presenter: `[TODO: name and admission number]`, `[TODO: course code, NCSC301 or lab code]`
-- `[IMG hero.png]` right side, 5.5 x 5.5 in, transparent PNG (section 7, I1).
+- Meta: "Software Engineering Lab · Assignment 8 · IIT (ISM) Dhanbad · September 2026"
+- Team: "Dinesh Krishna · Sankar · Vishesh · Sai Teja · Yash Agarwal · Yash Patidar"
+- Optional `[AI hero.png]` right side, about 5.5 x 5.5 in (section 7). Without it, use a large amber
+  number "14" with the label "use cases" and "27 requirements" as a bold typographic element instead.
 - Remove: "ACADEMIC SUBMISSION", "SPEC 4.02", "ARCHIVE", "INDEX ID", "APPROVED", "CATALOGUE-CORE-2025",
   "Inverted Keyword Index".
-- Notes: "This is the system I completed for Assignment 8: a catalogue of reusable designs and code,
-  built as a web application."
+- Notes: "This is the system we built for Assignment 8: a catalogue of reusable designs and code, as a web
+  application."
 
 ### Slide 2. Problem and scope (light)
 
@@ -213,7 +239,7 @@ Text in quotes is final wording. `[IMG ...]` is an image frame to leave empty (s
   "Design patterns > Behavioural patterns > Observer pattern class diagram" and
   "Web development > Authentication > JWT auth middleware". Caption: "Notation and category are separate
   properties of a component."
-- `[IMG problem.png]` optional, 3 x 3 in, section 7 I2, only if it fits.
+- Optional `[AI problem.png]`, 3 x 3 in, only if it fits.
 - Notes: "The problem statement asks for a catalogue, keyword search, hierarchy, and counters to help
   purge."
 
@@ -238,28 +264,28 @@ Text in quotes is final wording. `[IMG ...]` is an image frame to leave empty (s
 - Title: "11 non-functional requirements, each with evidence"
 - Table (teal header, 12 to 13 pt): columns **Category / Requirement / Evidence**.
 
-| Category | Requirement | Evidence |
-|---|---|---|
-| Performance (NFR-1) | Ranking 10,000 components with 5,000 keywords: 95th percentile under 500 ms (ranking only) | Benchmark T-40 |
-| Security (NFR-2) | Passwords bcrypt-hashed, never returned; JWT secret only from environment | T-44, T-47 |
-| Security (NFR-3) | Role checks on the server for every write and report | T-06, T-25 |
-| Security (NFR-10) | 20 login or register requests per IP per 15 minutes | T-48 |
-| Security (NFR-11) | CORS allow-list for browser origins | Checked by hand |
-| Validation (NFR-4) | Shared zod schemas; fixed error shape; no stack traces | T-09, T-20 |
-| Usability (NFR-5) | Core tasks in 3 screens; keyboard use; no axe violations on 5 public pages | E2E T-41, T-42, T-45 |
-| Reliability (NFR-6) | `/health` reports API and database status | T-01 |
-| Data integrity (NFR-8) | Counters and cascades atomic; never negative | T-26, T-11, T-24 |
-| Maintainability (NFR-7) | Strict TypeScript, layers, at least 80% service coverage, CI | CI, coverage gate |
-| Portability (NFR-9) | Node 22, configuration by environment variables | Windows and Linux CI |
+| Category                | Requirement                                                                                | Evidence             |
+| ----------------------- | ------------------------------------------------------------------------------------------ | -------------------- |
+| Performance (NFR-1)     | Ranking 10,000 components with 5,000 keywords: 95th percentile under 500 ms (ranking only) | Benchmark T-40       |
+| Security (NFR-2)        | Passwords bcrypt-hashed, never returned; JWT secret only from environment                  | T-44, T-47           |
+| Security (NFR-3)        | Role checks on the server for every write and report                                       | T-06, T-25           |
+| Security (NFR-10)       | 20 login or register requests per IP per 15 minutes                                        | T-48                 |
+| Security (NFR-11)       | CORS allow-list for browser origins                                                        | Checked by hand      |
+| Validation (NFR-4)      | Shared zod schemas; fixed error shape; no stack traces                                     | T-09, T-20           |
+| Usability (NFR-5)       | Core tasks in 3 screens; keyboard use; no axe violations on 5 public pages                 | E2E T-41, T-42, T-45 |
+| Reliability (NFR-6)     | `/health` reports API and database status                                                  | T-01                 |
+| Data integrity (NFR-8)  | Counters and cascades atomic; never negative                                               | T-26, T-11, T-24     |
+| Maintainability (NFR-7) | Strict TypeScript, layers, at least 80% service coverage, CI                               | CI, coverage gate    |
+| Portability (NFR-9)     | Node 22, configuration by environment variables                                            | Windows and Linux CI |
 
 - Add a small amber callout beside the table: "NFR-1 measures the ranking code only, not the network."
-- Notes: "I only claim what I can show; the right column says how each one is checked."
-- `[IMG shield.png]` optional, 2.5 x 2.5 in, section 7 I3, top right.
+- Notes: "We only claim what we can show; the right column says how each one is checked."
+- Optional `[AI shield.png]`, 2.5 x 2.5 in, top right.
 
 ### Slide 5. Use case model (light)
 
 - Title: "3 actors, 14 use cases"
-- Left: `[IMG use-case.png]`, frame 4.5 in wide x 6.1 in tall (image is 1744 x 2352 px, aspect 0.74).
+- Left: `[PIC images/diagrams/use-case.png]`, fit inside **4.3 in wide x 6.1 in tall** (1620 x 2324 px).
 - Right: three actor cards.
   - **Visitor**: browse categories, view components, search, register or log in.
   - **User** (a logged-in Visitor): also **use** a component.
@@ -273,7 +299,7 @@ Text in quotes is final wording. `[IMG ...]` is an image frame to leave empty (s
 ### Slide 6. Domain class model (light)
 
 - Title: "The domain model: 10 classes from the database schema"
-- Left: `[IMG class-domain.png]`, frame 7.0 in wide x 6.2 in tall (image 2612 x 2313, aspect 1.13).
+- Left: `[PIC images/diagrams/class-domain.png]`, fit inside **6.7 in wide x 6.2 in tall** (2473 x 2289 px).
 - Right: four callouts.
   - **Association classes:** `SearchResult` (rank, used) links a search to a component; `ComponentKeyword`
     links component and keyword.
@@ -323,47 +349,43 @@ Text in quotes is final wording. `[IMG ...]` is an image frame to leave empty (s
   5. **Purge.** Cataloguer sets criteria, reviews candidates, confirms. The server checks again and
      deletes; one audit entry each. **Manual, no scheduler.**
 - Side box "The counters": `useCount`, `queryHitCount`, `queryHitNotUsedCount`, `lastUsedAt`.
-- Optional small images on steps 3 and 5 (`search.png`, `purge.png`, I4 and I5), 1.2 x 1.2 in.
+- Optional small images on steps 3 and 5 (`[AI search.png]`, `[AI purge.png]`), 1.2 x 1.2 in.
 - Notes: "A component shown many times but never used is the purge candidate this design is built to find."
 
-### Slide 10. Sequence diagrams (light)
+### Slide 10. Sequence diagrams: search, then use (light)
 
-- Title: "Two flows: add a component, search then use"
-- Two panels side by side, each an image frame of 6.0 x 5.2 in: `[IMG seq-add.png]` and
-  `[IMG seq-search-use.png]` (these images do not exist yet: see section 6).
-- Under each, a caption with the messages so they can be redrawn (participants and steps):
-  - **Add component.** Cataloguer > Web console > ComponentController > ComponentService > PostgreSQL.
-    Steps: submit form; `POST /components` with token; authenticate, require cataloguer, validate with zod
-    (keywords trimmed, lowercased); check notation kind and category; one transaction: insert the
-    component with its keywords, write the audit row; `201` with the component.
-  - **Search then use.** User > Web app > SearchController > SearchService > (ComponentService for the
-    category filter) > PostgreSQL; then SearchController > UsageService. Steps: `POST /search`; validate;
-    find candidates, score, order, take the page; one transaction: save the query and results, hits +1 on the
-    page; return `queryId` and results. Then `POST /components/:id/use` with the token and `queryId`; one
-    transaction: mark the result used, hits-not-used -1, uses +1, usage event; return the counters.
-- Notes: "Both flows are single transactions, so a failure leaves nothing half-written."
+- Title: "Search and use: both are single transactions"
+- Two panels side by side, each on a white rounded card:
+  - Left: `[PIC images/diagrams/seq-search.png]`, fit inside **6.0 in wide x 4.8 in tall** (2129 x 1711 px).
+  - Right: `[PIC images/diagrams/seq-use.png]`, fit inside **6.0 in wide x 4.8 in tall** (1752 x 1455 px).
+- Captions under the panels (Calibri 13 pt):
+  - Left: "Search: validate, score, save the query and add the hit counters for the page, all in one
+    transaction."
+  - Right: "Use: mark the result used, lower hits-not-used, raise uses, log the event, all in one
+    transaction."
+- Notes: "A failure in either flow leaves nothing half-written; there is a test that forces a failure."
 
 ### Slide 11. Screens and roles (light)
 
 - Title: "Public pages for everyone, a console for the cataloguer"
 - Two tables side by side.
 
-| Public screen | Route | What you can do |
-|---|---|---|
-| Home | `/` | Search box, API and database status |
-| Search | `/search` | Keywords, any or all, filters (kind, notation, category), scores, **Use** |
-| Browse | `/browse` | Category tree, breadcrumb, component list, sort, subcategories |
-| Component | `/components/[id]` | Details, keywords, counters, content, **Use** |
-| Login, Register | `/login`, `/register` | Log in; register as User |
+| Public screen   | Route                 | What you can do                                                           |
+| --------------- | --------------------- | ------------------------------------------------------------------------- |
+| Home            | `/`                   | Search box, API and database status                                       |
+| Search          | `/search`             | Keywords, any or all, filters (kind, notation, category), scores, **Use** |
+| Browse          | `/browse`             | Category tree, breadcrumb, component list, sort, subcategories            |
+| Component       | `/components/[id]`    | Details, keywords, counters, content, **Use**                             |
+| Login, Register | `/login`, `/register` | Log in; register as User                                                  |
 
-| Cataloguer screen | Route | What you can do |
-|---|---|---|
-| Reports | `/console` | Totals, top used, top not used, never used |
-| Components | `/console/components` | List, create, edit, delete, keyword chips |
-| Categories | `/console/categories` | Create, rename, move, delete with reassign |
-| Notations | `/console/notations` | List and add notations |
-| Purge | `/console/purge` | Criteria, candidates, confirm |
-| Audit | `/console/audit` | Change history, filter by action |
+| Cataloguer screen | Route                 | What you can do                            |
+| ----------------- | --------------------- | ------------------------------------------ |
+| Reports           | `/console`            | Totals, top used, top not used, never used |
+| Components        | `/console/components` | List, create, edit, delete, keyword chips  |
+| Categories        | `/console/categories` | Create, rename, move, delete with reassign |
+| Notations         | `/console/notations`  | List and add notations                     |
+| Purge             | `/console/purge`      | Criteria, candidates, confirm              |
+| Audit             | `/console/audit`      | Change history, filter by action           |
 
 - Note: "Use needs a login. The console is for cataloguers only."
 - Notes: "The same site adapts to the role: visitors, users and cataloguers see different menus."
@@ -371,21 +393,30 @@ Text in quotes is final wording. `[IMG ...]` is an image frame to leave empty (s
 ### Slide 12. Demo: visitor and user (light)
 
 - Title: "Demo: find a component and use it"
-- Three screenshot frames in a row, each 4.0 x 2.6 in with a numbered caption underneath:
-  1. `[IMG shot-search.png]` "Search 'parser', any keyword: results with score and matched keywords"
-  2. `[IMG shot-detail.png]` "Open a result: details and counters; press Use"
-  3. `[IMG shot-browse.png]` "Browse the tree: Design patterns > Behavioural patterns"
+- Three screenshots, each fitted inside its box (aspect ratio kept), rounded frame, numbered caption
+  beside or under it:
+  1. `[PIC images/screenshots/shot-search.png]` (2400 x 1350), box about **6.6 x 3.7 in**, left.
+     Caption: "Search 'parser', any keyword: results with score and matched keywords"
+  2. `[PIC images/screenshots/shot-detail.png]` (1440 x 792), box about **5.6 x 3.1 in**, right top.
+     Caption: "Open a result: details and counters, after pressing Use"
+  3. `[PIC images/screenshots/shot-browse.png]` (2400 x 867), box about **5.6 x 2.0 in**, right bottom.
+     Caption: "Browse the tree: Design patterns > Behavioural patterns"
 - Below: one line: "Counters change: hits-not-used goes down when the result is used."
 - Notes: "Demo order: search, open, use, then show the counters change."
 
 ### Slide 13. Demo: cataloguer console (light)
 
 - Title: "Demo: the cataloguer keeps the catalogue clean"
-- Four frames in a 2 x 2 grid, each 5.8 x 2.7 in with captions:
-  1. `[IMG shot-console-components.png]` "Add a component with keyword chips"
-  2. `[IMG shot-reports.png]` "Reports: totals, top used, never used"
-  3. `[IMG shot-purge.png]` "Purge: 3 old unused components found with the default criteria"
-  4. `[IMG shot-audit.png]` "Audit log: every change recorded"
+- Four screenshots in a 2 x 2 arrangement, each fitted inside its box, with captions:
+  1. `[PIC images/screenshots/shot-console-components.png]` (2400 x 1206), box **5.4 x 2.7 in**.
+     "Add a component with keyword chips"
+  2. `[PIC images/screenshots/shot-reports.png]` (2400 x 1350), box **4.8 x 2.7 in**.
+     "Reports: totals, top used, never used"
+  3. `[PIC images/screenshots/shot-purge.png]` (2400 x 924), box **5.5 x 2.1 in**.
+     "Purge: 3 old unused components found with the default criteria"
+  4. `[PIC images/screenshots/shot-audit.png]` (2400 x 884), box **5.6 x 2.1 in**.
+     "Audit log: every change recorded"
+- The screenshots show demo data; do not quote the numbers inside them anywhere else.
 - Notes: "Purge is deliberate: criteria, review, confirm, and the server checks again."
 
 ### Slide 14. Testing and verification (light)
@@ -402,8 +433,8 @@ Text in quotes is final wording. `[IMG ...]` is an image frame to leave empty (s
   inside a transaction leaves no partial data.
 - Right column "Also checked": role checks; passwords hashed; JWT secret required; login rate limit; CORS.
 - Bottom line (muted): "Not covered: web unit tests, console accessibility, 360 px layout, load tests."
-- Optional `[IMG testing.png]` (I6), 2 x 2 in.
-- Notes: "Traceability from requirement to test is in the report: docs/08-report.md."
+- Optional `[AI testing.png]`, 2 x 2 in.
+- Notes: "Traceability from requirement to test is in the report."
 
 ### Slide 15. Limitations and future work (light)
 
@@ -419,92 +450,96 @@ Text in quotes is final wording. `[IMG ...]` is an image frame to leave empty (s
 - Right card **Future work**: synonym and embedding-based keyword suggestions; report-only suggestions of
   what to purge; duplicate detection by code similarity; version history for a component; token in an
   httpOnly cookie; a shared rate-limit store.
-- `[IMG roadmap.png]` optional (I7), 2.5 x 2.5 in.
-- Notes: "I list the limits myself, because each one has a clear next step."
+- Optional `[AI roadmap.png]`, 2.5 x 2.5 in.
+- Notes: "We list the limits ourselves, because each one has a clear next step."
 
 ### Slide 16. Thank you (dark)
 
 - Title: "Thank you"; subtitle "Questions?"
-- Small line: `[TODO: repository link]`
-- `[IMG hero.png]` reuse from slide 1, smaller.
+- Team line: "Dinesh Krishna · Sankar · Vishesh · Sai Teja · Yash Agarwal · Yash Patidar"
+- Repository: "github.com/YashIIT0909/SWE_LAB_Assignment" (make it a working link:
+  https://github.com/YashIIT0909/SWE_LAB_Assignment)
+- Optional `[AI hero.png]` reused from slide 1, smaller.
 
 ### Slide A1. Appendix: backend class diagram (light)
 
 - Title: "Backend classes and their dependencies"
-- `[IMG class-backend.png]`, frame 8.8 in wide x 6.0 in tall (image 3456 x 2365, aspect 1.46).
+- `[PIC images/diagrams/class-backend.png]`, fit inside **9.0 in wide x 6.0 in tall** (3282 x 2340 px).
+  Use the space to the right for a short legend.
 - Caption: "Services are modules of functions, drawn as classes to show what each offers and depends on."
 
-### Slide A2. Appendix: data flow diagrams (light)
+### Slide A2. Appendix: sequence diagram, add a component (light)
 
-- Title: "Data flow: context and level 1"
-- Left: `[IMG dfd-level0.png]`, right: `[IMG dfd-level1.png]` (see section 6).
-- Reference for redrawing (this is the project's own DFD, use it exactly):
-  - Level 0: external entities **User / Visitor** and **Cataloguer**; one process "Software Component
-    Cataloguing System".
-  - Level 1: processes **1.0 Authenticate, 2.0 Maintain components and keywords, 3.0 Maintain categories
-    and notations, 4.0 Search catalogue, 5.0 Record usage, 6.0 Browse catalogue, 7.0 Report and purge**;
-    data stores **D1 Users, D2 Components, D3 Keywords and links, D4 Categories, D5 Notations, D6 Search
-    log, D7 Usage events, D8 Audit log**.
-  - Key flows: 4.0 reads D3, D2, D4, writes the query and results to D6 and hit counters to D2; 5.0 reads and
-    updates D6, updates D2, writes D7; 7.0 reads D2, D6, D7, D8, deletes from D2, writes D8.
-- Remove the old 5-process, 4-store DFD.
+- Title: "Adding a component with keywords"
+- `[PIC images/diagrams/seq-add.png]`, fit inside **8.0 in wide x 6.0 in tall** (2281 x 1705 px).
+- Right side, short text: "One transaction: the component, its keywords and the audit row are saved
+  together, or not at all. Keyword suggestions while typing come from a separate call."
 
-## 6. Diagram and screenshot images the owner will add
+### Slide A3. Appendix: data flow, context level (light)
 
-**From the repository (already exist).** All in `docs/diagrams/`; PNG for slides, SVG if sharper is
-needed.
+- Title: "Data flow: the system and its two actors"
+- `[PIC images/diagrams/dfd-level0.png]`, fit inside **12.0 in wide x 3.5 in tall** (1439 x 418 px).
+- Below the picture, two short columns: "User / Visitor sends: registration, credentials, search keywords,
+  browse requests, use notifications" and "Cataloguer sends: credentials, component, category and notation
+  details, report and purge criteria, purge selection".
 
-| File | Slide | Frame size |
-|---|---|---|
-| `use-case.png` | 5 | 4.5 x 6.1 in |
-| `class-domain.png` | 6 | 7.0 x 6.2 in |
-| `class-backend.png` | A1 | 8.8 x 6.0 in |
+### Slide A4. Appendix: data flow, level 1 (light)
 
-**Do not exist yet (ask the owner's Claude Code to generate them):** `seq-add.png`,
-`seq-search-use.png` (PlantUML sequence diagrams from the message lists in slide 10),
-`dfd-level0.png`, `dfd-level1.png` (from `docs/03-structured-analysis.md`). Each should be rendered in
-the new palette.
+- Title: "Data flow: seven processes and eight data stores"
+- Left: `[PIC images/diagrams/dfd-level1.png]`, fit inside **6.2 in wide x 6.3 in tall**
+  (2955 x 3208 px). It is dense; tell the owner in your reply that the SVG can be zoomed.
+- Right: a two-part legend. **Processes:** 1.0 Authenticate, 2.0 Maintain components and keywords, 3.0
+  Maintain categories and notations, 4.0 Search catalogue, 5.0 Record usage, 6.0 Browse catalogue, 7.0
+  Report and purge. **Data stores:** D1 Users, D2 Components, D3 Keywords and links, D4 Categories,
+  D5 Notations, D6 Search log, D7 Usage events, D8 Audit log.
 
-**Screenshots to capture** (Chrome, window about 1600 x 900, zoom 100%). Run the site locally with the
-seeded database (`npm run dev`). Log in as `cat@sccs.local` / `changeme123` for cataloguer screens;
-register a new user such as `alice@example.com` for user screens. Take the purge screenshot **before**
-purging.
+## 6. Images provided in `images/`
 
-| File | Screen | What to show |
-|---|---|---|
-| `shot-search.png` | `/search` | Keyword `parser`, "Any keyword": results with score badges |
-| `shot-detail.png` | `/components/[id]` | A result with Use button and counters |
-| `shot-browse.png` | `/browse` | Tree open at Design patterns > Behavioural patterns |
-| `shot-console-components.png` | `/console/components/new` | Form with keyword chips |
-| `shot-reports.png` | `/console` | Totals and top lists |
-| `shot-purge.png` | `/console/purge` | Default criteria, 3 candidates listed |
-| `shot-audit.png` | `/console/audit` | Several entries |
+**Diagrams** (`images/diagrams/`, PNG for slides; the same names with `.svg` are vector copies). All were drawn
+in the palette of section 4 on a white background.
 
-## 7. AI-generated images with transparent background (owner makes these)
+| File                | Pixels      | Slide | Fit inside    |
+| ------------------- | ----------- | ----- | ------------- |
+| `use-case.png`      | 1620 x 2324 | 5     | 4.3 x 6.1 in  |
+| `class-domain.png`  | 2473 x 2289 | 6     | 6.7 x 6.2 in  |
+| `seq-search.png`    | 2129 x 1711 | 10    | 6.0 x 4.8 in  |
+| `seq-use.png`       | 1752 x 1455 | 10    | 6.0 x 4.8 in  |
+| `class-backend.png` | 3282 x 2340 | A1    | 9.0 x 6.0 in  |
+| `seq-add.png`       | 2281 x 1705 | A2    | 8.0 x 6.0 in  |
+| `dfd-level0.png`    | 1439 x 418  | A3    | 12.0 x 3.5 in |
+| `dfd-level1.png`    | 2955 x 3208 | A4    | 6.2 x 6.3 in  |
 
-Generate all in one session so the style matches. Start every prompt with this style line:
+**Screenshots** (`images/screenshots/`): real pages of the running website, taken at 1600 x 900 (scaled
+1.5x). Pages with a footer were cropped above it. The website has its own look (black and white with
+indigo); frame the pictures, do not recolour them.
 
-> "Flat vector illustration, soft rounded shapes, gentle shadow, deep teal (#0B3C49 and #1F7A8C) with
-> warm amber (#F4A62A) accents, clean minimal, no text, no letters, no logos, transparent background."
+| File                          | Pixels      | Slide | Shows                                                 |
+| ----------------------------- | ----------- | ----- | ----------------------------------------------------- |
+| `shot-search.png`             | 2400 x 1350 | 12    | Keyword `parser`, "Any keyword", 3 results with score |
+| `shot-detail.png`             | 1440 x 792  | 12    | CSV parser detail after pressing Use, with counters   |
+| `shot-browse.png`             | 2400 x 867  | 12    | Tree open at Behavioural patterns, 2 components       |
+| `shot-console-components.png` | 2400 x 1206 | 13    | New component form, keyword chips filled              |
+| `shot-reports.png`            | 2400 x 1350 | 13    | Catalogue report: totals, top used, by notation       |
+| `shot-purge.png`              | 2400 x 924  | 13    | Default criteria, 3 purge candidates                  |
+| `shot-audit.png`              | 2400 x 884  | 13    | Audit log with several entries                        |
 
-Export PNG with a transparent background (remove the background if the tool cannot), at least 1600 px on the
-long side, and name the files as below.
+## 7. Optional illustrations (`images/ai-generated/`)
 
-| ID | File | Slide | Size on slide | Prompt (after the style line) |
-|---|---|---|---|---|
-| I1 | `hero.png` | 1, 16 | 5.5 x 5.5 in | "Isometric library of software: stacked glossy component cubes and puzzle pieces on shelves, a magnifying glass in front" |
-| I2 | `problem.png` | 2 | 3 x 3 in | "A messy pile of documents and code files turning into an organised tree of folders" |
-| I3 | `shield.png` | 4 | 2.5 x 2.5 in | "A shield with a check mark next to a small gauge" |
-| I4 | `search.png` | 9 | 1.2 x 1.2 in | "A magnifying glass over three keyword tags" |
-| I5 | `purge.png` | 9 | 1.2 x 1.2 in | "A broom sweeping small unused boxes into a bin" |
-| I6 | `testing.png` | 14 | 2 x 2 in | "A clipboard with green check marks and two gears" |
-| I7 | `roadmap.png` | 15 | 2.5 x 2.5 in | "A signpost with three arrows and a light bulb" |
+The owner may add transparent-background PNG illustrations (made with an AI image tool) to
+`images/ai-generated/`. Use a file **only if it exists**; the deck must look finished without any of them.
+Expected names and places:
 
-Every image is optional except I1. If an image is missing, the slide must still look complete without
-it: do not leave an empty frame in the final deck.
+| File          | Slide | Size on slide                    |
+| ------------- | ----- | -------------------------------- |
+| `hero.png`    | 1, 16 | 5.5 x 5.5 in (slide 16: smaller) |
+| `problem.png` | 2     | 3 x 3 in                         |
+| `shield.png`  | 4     | 2.5 x 2.5 in                     |
+| `search.png`  | 9     | 1.2 x 1.2 in                     |
+| `purge.png`   | 9     | 1.2 x 1.2 in                     |
+| `testing.png` | 14    | 2 x 2 in                         |
+| `roadmap.png` | 15    | 2.5 x 2.5 in                     |
 
-The teal, mist and amber colours of the diagrams should also change. Re-rendering the three diagrams in
-the new palette is a separate job for Claude Code (edit the `skinparam` colours in the `.puml` files).
+They share one style (flat vector, teal and amber, no text). Do not recolour them.
 
 ## 8. Never say (these are false for this system)
 
@@ -518,14 +553,18 @@ the new palette is a separate job for Claude Code (edit the `skinparam` colours 
   for every user.
 - Retries with circuit breakers, keyset pagination, offline cache, deep-tree (12 level) tests,
   concurrency or race tests, fault-injection suites, load tests.
-- "Approved", "verified by the university", "production-grade", "WCAG AA compliant", "99% availability".
+- "Approved", "verified by the university", "production-grade", "WCAG AA compliant", "99% availability",
+  "IEEE 830 aligned" (the SRS contains requirements only).
 - Anything about a year other than 2026.
 
 ## 9. Final checks
 
-- All 16 main slides and 2 appendix slides exist in the order of section 3.
+- All 16 main slides and 4 appendix slides exist in the order of section 3, saved as
+  `Software_Component_Cataloguing_System_v2.pptx`.
 - Every number on a slide matches section 1 (61, 9, 98%, 48, 27, 11, 14 use cases, 10 classes).
+- Every picture is from `images/`, unstretched, and inside the box given; no empty frames.
 - No text is cut off or overlaps; nothing is smaller than 12 pt; margins at least 0.5 in.
 - Only colours from section 4; only Cambria, Calibri and Courier New.
-- Every image frame is labelled `INSERT: <file>` and sized as listed, and speaker notes exist on every slide.
+- The six team names and the repository link are correct on slides 1 and 16; speaker notes exist on
+  every slide.
 - Reply with the changed-slides list, the `[TODO]` list and any doubts.

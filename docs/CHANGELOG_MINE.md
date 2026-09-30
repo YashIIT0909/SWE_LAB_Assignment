@@ -109,4 +109,14 @@ and the Playwright E2E suite (9 of 9 passing).
   and a list of claims that must not appear.
 - **Main findings:** the old deck said purge is an automated daemon, listed a Spring Boot, Docker and JUnit
   stack, showed a class model with classes that do not exist, and had no requirements or demo slides.
-- **Files:** `docs/PPT_Modify.md`. The `.pptx` itself is not changed and not committed.
+- **Files:** `ppt/PPT_Modify.md`. The old `.pptx` is not changed.
+
+## 11. Presentation package
+
+- **What:** new `ppt/` folder with `PPT_Modify.md` (rewritten now that the images exist), a copy of the old
+  deck, copies of the context documents, 8 diagrams (PNG and SVG) and 7 screenshots, so the deck can be
+  rebuilt in one go. Added sequence diagrams (add, search, use) and both data flow diagrams as PlantUML,
+  and a shared `sccs-theme.puml` so every diagram uses the new teal and amber palette.
+- **Screenshots:** captured with Playwright against the local database only (never the live one); the dev
+  badge and the site footer were left out.
+- **Files:** `ppt/`, `docs/diagrams/*`.
