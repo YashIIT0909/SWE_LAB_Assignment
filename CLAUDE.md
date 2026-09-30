@@ -96,7 +96,9 @@ response) -> `services/` (all business logic, the **only** place that imports Pr
 - There is no separate validate middleware: controllers call `schema.parse(...)` on zod schemas from
   `packages/shared`, and the error handler turns failures into `VALIDATION_ERROR`.
 - `app.ts` mounts the same router at `/api/v1` (canonical) and also at `/v1`, `/api` and `/` so the
-  Vercel rewrite works. CORS currently allows any origin (the origin callback always accepts).
+  Vercel rewrite works. CORS allows requests with no Origin header, origins listed in `WEB_ORIGIN`
+  (or everything if it is unset or contains `*`), `http://localhost:*` and `*.vercel.app`; any other
+  origin gets no CORS headers, so browsers block it.
 
 ## Conventions
 
