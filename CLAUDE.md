@@ -119,8 +119,9 @@ response) -> `services/` (all business logic, the **only** place that imports Pr
 - Env vars documented in `.env.example` per app; real `.env` files are never committed.
 - Keywords are stored trimmed and lowercase; normalise in the shared zod schema.
 - Git: all work is committed directly on `main` (no branches; single maintainer), one task per
-  commit, diff shown to Dinesh before committing; conventional commits
-  (`feat:`, `fix:`, `docs:`, `test:`, `chore:`, `refactor:`, `ci:`).
+  commit, diff shown to Dinesh before committing. Commit messages are plain English written as
+  Dinesh: short subject line, no `feat:`/`fix:` prefix, no Co-Authored-By or AI trailer. Never push
+  unless Dinesh says so.
 - Every phase keeps lint, typecheck and tests green and updates `docs/PROGRESS.md`.
 
 ## Data model (Prisma, exact names)

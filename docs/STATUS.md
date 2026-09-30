@@ -223,24 +223,28 @@ Log in as the seeded cataloguer using `SEED_CATALOGUER_EMAIL` / `SEED_CATALOGUER
 ## 12. Incomplete, broken, or questionable
 
 ### 12.1 Broken
-- **Fresh `npm install` fails** without `apps/api/.env`: `postinstall` runs `prisma generate`, which
-  loads `prisma.config.ts`, which requires `DIRECT_URL`. Workaround documented; a one-line code fix
-  (fallback URL in `prisma.config.ts`, or `env` default) is a Phase 2 candidate.
+- **FIXED (Phase 2, item 1): fresh `npm install` failed** without `apps/api/.env`: `postinstall` runs
+  `prisma generate`, which loads `prisma.config.ts`, which required `DIRECT_URL`. Now falls back to an
+  empty string, since generating the client needs no database.
+- **FIXED (Phase 2, item 5): CI was red.** Run #8 failed at `npx prisma db seed` because `ci.yml` did
+  not set `SEED_CATALOGUER_EMAIL` / `SEED_CATALOGUER_PASSWORD`. Added. Needs a push to confirm green.
 
 ### 12.2 Security shortcuts (good viva material, decide in Phase 2)
-- `auth.service.ts` `secret()` falls back to a **hard-coded JWT secret** if `JWT_SECRET` is unset.
-  Anyone who reads the repo could forge a cataloguer token on such a deployment. Contradicts SRS NFR-2
-  ("JWT secret from env only").
-- CORS in `app.ts` **accepts every origin**: the callback's final line is `callback(null, true)`, so the
-  allow-list above it has no effect.
+- **FIXED (Phase 2, item 2):** `auth.service.ts` `secret()` used to fall back to a **hard-coded JWT
+  secret** if `JWT_SECRET` was unset, which let anyone who read the repo forge a cataloguer token.
+  It now throws. SRS NFR-2 ("JWT secret from env only") is true again.
+- **FIXED (Phase 2, item 3):** CORS in `app.ts` **accepted every origin** (final line was
+  `callback(null, true)`). Unknown origins now get no CORS headers. An unset `WEB_ORIGIN` still allows
+  all, so set it on Vercel.
 - Rate limiter is in-memory per process: resets on restart and is not shared between serverless instances.
 - Token kept in `localStorage` (readable by any script on the page if XSS existed); common trade-off, fine for this scope.
 
 ### 12.3 Cosmetic / minor
 - Home page "System Highlights" numbers are hard-coded text (`app/page.tsx` ~line 360), not live data.
 - `RATE_LIMITED` (429) error code exists in code but is missing from CLAUDE.md's error code list.
-- Purge demo gotcha: seeded components are brand new, so with the default `olderThanDays=30` the
-  purge page shows **0 candidates**. Set it to 0 in the form to demo purge (verified: 14 candidates).
+- **FIXED (Phase 2, item 4):** purge demo gotcha. Seeded components were brand new, so the default
+  `olderThanDays=30` showed **0 candidates**. The seed now adds 3 unused components dated 60 days
+  ago (17 demo components in total), so the default purge page lists them.
 - `apps/api/api/index.js` is a committed build output (needed by Vercel as configured).
 - No unit tests for the web app (only E2E). Enough for "testing exists", as the assignment asks.
 
