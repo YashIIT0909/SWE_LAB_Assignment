@@ -126,3 +126,34 @@ export const DEMO_COMPONENTS = [
     'Structure chart decomposing a payroll system into modules.',
   ],
 ] as const
+
+/** Same shape as DEMO_COMPONENTS. Seeded with createdAt ~60 days ago and no uses, so they show
+ * up as purge candidates with the default purge settings. */
+export const STALE_DEMO_COMPONENTS = [
+  [
+    'Legacy XML parser',
+    'CODE',
+    'Java',
+    'Parsing',
+    ['xml', 'parser', 'sax'],
+    'Old SAX-based XML parser nobody has needed since the JSON rewrite.',
+  ],
+  [
+    'Bubble sort demo',
+    'CODE',
+    'C',
+    'Sorting and searching',
+    ['sort', 'bubble', 'teaching'],
+    'Textbook bubble sort kept from an earlier course exercise.',
+  ],
+  [
+    'Old billing DFD',
+    'DESIGN',
+    'DFD',
+    'Data processing',
+    ['billing', 'data-flow', 'legacy'],
+    'Data flow diagram of a billing process that was replaced.',
+  ],
+] as const
+
+export const STALE_DEMO_AGE_DAYS = 60

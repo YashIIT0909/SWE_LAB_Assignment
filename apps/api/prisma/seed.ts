@@ -2,7 +2,7 @@ import 'dotenv/config'
 import bcrypt from 'bcryptjs'
 import { prisma } from '../src/lib/prisma'
 import { linkKeywords } from '../src/services/component.service'
-import { DEMO_COMPONENTS, NOTATIONS } from './seed-data'
+import { DEMO_COMPONENTS, NOTATIONS, STALE_DEMO_AGE_DAYS, STALE_DEMO_COMPONENTS } from './seed-data'
 import { slugify } from '@sccs/shared'
 
 const TREE: Record<string, string[]> = {
@@ -41,22 +41,33 @@ async function main() {
 
   const notations = new Map((await prisma.notation.findMany()).map((n) => [n.name, n.id]))
   const cats = new Map((await prisma.category.findMany()).map((c) => [c.name, c.id]))
-  for (const [name, kind, notation, cat, keywords, description] of DEMO_COMPONENTS) {
-    const existing = await prisma.component.findFirst({ where: { name } })
-    if (!existing) {
-      await prisma.component.create({
-        data: {
-          name,
-          kind,
-          description,
-          notationId: notations.get(notation)!,
-          categoryId: cats.get(cat)!,
-          createdById: cataloguer.id,
-          keywords: { create: linkKeywords([...keywords]) },
-        },
-      })
+  async function addComponents(
+    list: typeof DEMO_COMPONENTS | typeof STALE_DEMO_COMPONENTS,
+    createdAt?: Date,
+  ) {
+    for (const [name, kind, notation, cat, keywords, description] of list) {
+      const existing = await prisma.component.findFirst({ where: { name } })
+      if (!existing) {
+        await prisma.component.create({
+          data: {
+            name,
+            kind,
+            description,
+            notationId: notations.get(notation)!,
+            categoryId: cats.get(cat)!,
+            createdById: cataloguer.id,
+            keywords: { create: linkKeywords([...keywords]) },
+            ...(createdAt && { createdAt }),
+          },
+        })
+      }
     }
   }
+  await addComponents(DEMO_COMPONENTS)
+  await addComponents(
+    STALE_DEMO_COMPONENTS,
+    new Date(Date.now() - STALE_DEMO_AGE_DAYS * 86_400_000),
+  )
   console.log('Seed complete')
 }
 
