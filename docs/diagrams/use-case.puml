@@ -1,0 +1,66 @@
+@startuml use-case
+title Software Component Cataloguing System - use case diagram
+left to right direction
+skinparam shadowing false
+skinparam dpi 170
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #333333
+}
+skinparam ArrowColor #333333
+
+actor Visitor
+actor User
+actor Cataloguer
+
+User --|> Visitor
+Cataloguer --|> User
+
+rectangle "Software Component Cataloguing System" {
+  usecase "UC-1\nRegister / Login" as UC1
+  usecase "UC-6\nQuery by keywords" as UC6
+  usecase "UC-8\nBrowse category" as UC8
+  usecase "UC-13\nView component details" as UC13
+  usecase "UC-7\nUse component" as UC7
+
+  usecase "UC-2\nAdd component" as UC2
+  usecase "UC-3\nEdit component" as UC3
+  usecase "UC-4\nDelete component" as UC4
+  usecase "UC-5\nAssociate keywords" as UC5
+  usecase "UC-9\nManage categories" as UC9
+  usecase "UC-12\nManage notations" as UC12
+  usecase "UC-10\nView usage report" as UC10
+  usecase "UC-14\nView audit log" as UC14
+  usecase "UC-11\nPurge unused components" as UC11
+}
+
+Visitor --> UC1
+Visitor --> UC6
+Visitor --> UC8
+Visitor --> UC13
+User --> UC7
+
+Cataloguer --> UC2
+Cataloguer --> UC3
+Cataloguer --> UC4
+Cataloguer --> UC5
+Cataloguer --> UC9
+Cataloguer --> UC12
+Cataloguer --> UC10
+Cataloguer --> UC14
+Cataloguer --> UC11
+
+UC7 .> UC6 : <<extend>>
+UC7 .> UC13 : <<extend>>
+UC13 .> UC6 : <<extend>>
+UC13 .> UC8 : <<extend>>
+UC5 .> UC2 : <<extend>>
+UC5 .> UC3 : <<extend>>
+
+note right of UC7
+  Extension point: the "Use this component"
+  button on a search result or a detail page.
+  Needs a logged-in User or Cataloguer.
+end note
+@enduml

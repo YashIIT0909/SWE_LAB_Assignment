@@ -1,0 +1,141 @@
+@startuml class-backend
+title SCCS backend: layers and dependencies (apps/api/src)
+!pragma layout smetana
+skinparam shadowing false
+skinparam dpi 170
+skinparam classAttributeIconSize 0
+hide empty attributes
+
+package "routes (Express routers)" as Routes <<Rectangle>> {
+  class "auth, categories, components,\nkeywords, notations, reports,\nsearch, health" as RouterSet <<router>>
+}
+
+package "middleware" as MW <<Rectangle>> {
+  class auth <<middleware>> {
+    +authenticate()
+    +requireLogin()
+    +requireRole(role)
+    +requireCataloguer()
+  }
+  class rateLimit <<middleware>> {
+    +rateLimit(options)
+  }
+  class errorHandler <<middleware>> {
+    +notFoundRoute()
+    +errorHandler()
+  }
+}
+
+package "controllers" as Ctl <<Rectangle>> {
+  class AuthController <<controller>>
+  class CategoryController <<controller>>
+  class ComponentController <<controller>>
+  class KeywordController <<controller>>
+  class NotationController <<controller>>
+  class SearchController <<controller>>
+  class ReportController <<controller>>
+}
+
+package "services (modules of functions)" as Svc <<Rectangle>> {
+  class AuthService <<service>> {
+    +register(dto)
+    +login(dto)
+    +me(userId)
+    +sign(user)
+    +verifyToken(token)
+  }
+  class CategoryService <<service>> {
+    +tree()
+    +get(id)
+    +create(body, actorId)
+    +update(id, body, actorId)
+    +remove(id, reassignTo, actorId)
+    +descendantIds(id)
+    +breadcrumb(id)
+    +assertExists(id)
+  }
+  class ComponentService <<service>> {
+    +list(query)
+    +get(id)
+    +create(body, actorId)
+    +update(id, body, actorId)
+    +remove(id, actorId)
+    +categoryFilter(categoryId, includeDescendants)
+    +toSummary(row)
+    +linkKeywords(terms)
+  }
+  class KeywordService <<service>> {
+    +replace(componentId, terms, actorId)
+    +add(componentId, terms, actorId)
+    +remove(componentId, keywordId, actorId)
+    +suggest(prefix, limit)
+  }
+  class NotationService <<service>> {
+    +list(kind)
+    +create(body, actorId)
+  }
+  class SearchService <<service>> {
+    +search(body, userId)
+    +rank(terms, candidates, match)
+    +termScore(term, keyword)
+  }
+  class UsageService <<service>> {
+    +use(componentId, userId, queryId)
+  }
+  class ReportService <<service>> {
+    +summary()
+    +candidateWhere(params)
+    +purgeCandidates(query)
+    +purge(componentIds, params, actorId)
+    +auditLog(query)
+  }
+  class AuditService <<service>> {
+    +audit(tx, actorId, action, entityType, entityId, details)
+  }
+  class HealthService <<service>> {
+    +check()
+  }
+}
+
+class PrismaClient <<lib/prisma.ts>>
+class AppError <<errors.ts>> {
+  +code
+  +status
+  +message
+  +details
+}
+
+RouterSet ..> auth : uses
+RouterSet ..> rateLimit : uses
+RouterSet ..> AuthController
+RouterSet ..> CategoryController
+RouterSet ..> ComponentController
+RouterSet ..> KeywordController
+RouterSet ..> NotationController
+RouterSet ..> SearchController
+RouterSet ..> ReportController
+RouterSet ..> HealthService : health route
+
+auth ..> AuthService : verifyToken
+
+AuthController ..> AuthService
+CategoryController ..> CategoryService
+ComponentController ..> ComponentService
+ComponentController ..> KeywordService
+KeywordController ..> KeywordService
+NotationController ..> NotationService
+SearchController ..> SearchService
+SearchController ..> UsageService
+ReportController ..> ReportService
+
+ComponentService ..> CategoryService
+SearchService ..> ComponentService
+CategoryService ..> AuditService
+ComponentService ..> AuditService
+KeywordService ..> AuditService
+NotationService ..> AuditService
+ReportService ..> AuditService
+
+Svc ..> PrismaClient : all services except AuditService
+Svc ..> AppError : throw
+@enduml

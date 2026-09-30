@@ -1,0 +1,123 @@
+@startuml class-domain
+title SCCS domain model (from apps/api/prisma/schema.prisma)
+!pragma layout smetana
+skinparam shadowing false
+skinparam dpi 170
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+hide empty methods
+
+enum Role <<enumeration>> {
+  CATALOGUER
+  USER
+}
+
+enum ComponentKind <<enumeration>> {
+  DESIGN
+  CODE
+}
+
+class User {
+  id : String
+  name : String
+  email : String {unique}
+  passwordHash : String
+  role : Role
+  createdAt : DateTime
+}
+
+class Category {
+  id : String
+  name : String
+  slug : String
+  description : String [0..1]
+  createdAt : DateTime
+  updatedAt : DateTime
+}
+
+class Notation {
+  id : String
+  name : String {unique}
+  kind : ComponentKind
+}
+
+class Component {
+  id : String
+  name : String
+  description : String
+  kind : ComponentKind
+  version : String = "1.0.0"
+  author : String [0..1]
+  sourceUrl : String [0..1]
+  content : Text [0..1]
+  useCount : Int = 0
+  queryHitCount : Int = 0
+  queryHitNotUsedCount : Int = 0
+  lastUsedAt : DateTime [0..1]
+  createdAt : DateTime
+  updatedAt : DateTime
+}
+
+class Keyword {
+  id : String
+  term : String {unique}
+}
+
+class ComponentKeyword {
+  componentId, keywordId {id}
+}
+
+class SearchQuery {
+  id : String
+  terms : String[*]
+  filters : Json
+  resultCount : Int
+  createdAt : DateTime
+}
+
+class SearchResult {
+  queryId, componentId {id}
+  rank : Int
+  used : Boolean = false
+}
+
+class UsageEvent {
+  id : String
+  createdAt : DateTime
+}
+
+class AuditLog {
+  id : String
+  action : String
+  entityType : String
+  entityId : String
+  details : Json [0..1]
+  createdAt : DateTime
+}
+
+User "1" -- "0..*" Component : creates >
+Notation "1" -- "0..*" Component : expresses >
+Category "1" -- "0..*" Component : classifies >
+Category "0..1\nparent" o-- "0..*\nchildren" Category
+Component "0..*" -- "0..*" Keyword : described by >
+(Component, Keyword) .. ComponentKeyword
+Component "1" *-- "0..*" UsageEvent
+SearchQuery "0..*" -- "0..*" Component : returns >
+(SearchQuery, Component) .. SearchResult
+User "0..1" -- "0..*" SearchQuery : runs >
+SearchQuery "0..1" -- "0..*" UsageEvent : led to >
+User "0..1" -- "0..*" UsageEvent : triggers >
+User "1" -- "0..*" AuditLog : performs >
+
+note right of Notation
+  Rule: notation.kind must equal
+  component.kind, otherwise
+  NOTATION_KIND_MISMATCH (422).
+end note
+
+note bottom of Category
+  Sibling names are unique. A category
+  cannot be moved under itself or a
+  descendant (CATEGORY_CYCLE).
+end note
+@enduml
