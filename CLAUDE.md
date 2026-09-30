@@ -231,11 +231,10 @@ Run from the repo root unless noted. Local Postgres databases `sccs_dev` and `sc
 First-time setup (verified 30 Sep 2026 on Node 22, Postgres 16):
 
 ```
-cp apps/api/.env.example apps/api/.env        # BEFORE npm install: postinstall runs prisma generate,
-                                              # which fails if DIRECT_URL is unset
+npm install                                   # also runs prisma generate (needs no .env or database)
+cp apps/api/.env.example apps/api/.env        # needed from here on: migrate, seed, dev, tests
 cp apps/web/.env.example apps/web/.env.local  # NEXT_PUBLIC_API_URL
 # create DBs sccs_dev and sccs_test; if Postgres needs a password over TCP, put it in the URLs
-npm install                                   # also runs prisma generate
 npm run db:migrate -w @sccs/api               # or db:deploy to just apply existing migrations
 npm run db:seed -w @sccs/api                  # notations, cataloguer (SEED_CATALOGUER_*), demo data
 ```
