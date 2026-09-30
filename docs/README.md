@@ -8,7 +8,7 @@ What each file in `docs/` is, and whether it matches the code as of 30 Sep 2026.
 | `01-SRS.md` | Functional (FR-1..FR-27) and non-functional (NFR-1..NFR-11) requirements. | Yes, rewritten in Phase 3. |
 | `02-use-cases.md` | Use cases UC-1..UC-14, each with flows, and the use case diagram. | Yes, redone in Phase 4. |
 | `diagrams/` | PlantUML sources and PNG/SVG images of the use case diagram and the two class diagrams. See `diagrams/README.md`. | Yes, Phase 4. |
-| `03-structured-analysis.md` | Structured analysis: context and level 1 data flow diagrams and a data dictionary, written before coding. Matches the code. | Not re-checked; not part of the required deliverables. |
+| `03-structured-analysis.md` | Structured analysis: context and level 1 data flow diagrams and a data dictionary, written before coding. | The level 1 flows were read against the code and are consistent; the data dictionary was not re-checked. Not a required deliverable. |
 | `04-design.md` | Architecture, layers, ER diagram, class diagrams, sequence, state and activity diagrams. | Layers, class diagrams and sequence diagrams checked and corrected in Phase 4. The ER, state and activity diagrams were not re-checked. |
 | `05-api.md` | Every endpoint with request and response examples, error codes, security rules. | Yes. |
 | `06-test-plan.md` | Test strategy, test cases T-01..T-48, results. | Yes. |
