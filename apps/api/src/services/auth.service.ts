@@ -10,7 +10,9 @@ export interface TokenPayload {
 }
 
 const secret = () => {
-  return process.env.JWT_SECRET || 'sccs-default-super-secret-key-change-in-production'
+  const s = process.env.JWT_SECRET
+  if (!s) throw new Error('JWT_SECRET is not set')
+  return s
 }
 
 const publicUser = { id: true, name: true, email: true, role: true, createdAt: true } as const
