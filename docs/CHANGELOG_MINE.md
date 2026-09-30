@@ -97,3 +97,16 @@ and the Playwright E2E suite (9 of 9 passing).
   UC-14), `README.md` index.
 - **Files:** `docs/02-use-cases.md`, `docs/04-design.md`, `docs/08-report.md`, `docs/README.md`,
   `docs/07-project-plan.md`, `docs/STATUS.md`, `docs/PROGRESS.md`.
+
+# Phase 5 (PPT)
+
+## 10. PPT comparison and change instructions
+
+- **What:** compared the 11-slide PPT with the code, SRS and UML and wrote `docs/PPT_Modify.md`: the
+  facts to use, what is wrong on each slide, the new slide list (16 main and 2 appendix slides, with new
+  requirements, architecture and demo slides), a new colour palette and fonts, the exact text of every
+  slide, the diagram and screenshot images to add by hand, prompts for transparent AI-made illustrations,
+  and a list of claims that must not appear.
+- **Main findings:** the old deck said purge is an automated daemon, listed a Spring Boot, Docker and JUnit
+  stack, showed a class model with classes that do not exist, and had no requirements or demo slides.
+- **Files:** `docs/PPT_Modify.md`. The `.pptx` itself is not changed and not committed.
