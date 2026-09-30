@@ -18,6 +18,8 @@ jobs:
       DIRECT_URL: postgresql://postgres:postgres@localhost:5432/sccs_test
       DATABASE_URL_TEST: postgresql://postgres:postgres@localhost:5432/sccs_test
       JWT_SECRET: ci-secret
+      SEED_CATALOGUER_EMAIL: cat@sccs.local
+      SEED_CATALOGUER_PASSWORD: changeme123
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
