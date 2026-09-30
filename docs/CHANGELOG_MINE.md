@@ -48,9 +48,31 @@ and the Playwright E2E suite (9 of 9 passing).
 - **Why:** run #8 failed at `npx prisma db seed` with "SEED_CATALOGUER_PASSWORD is not set". The E2E
   specs t42 and t43 log in with exactly these values.
 - **Files:** `.github/workflows/ci.yml`.
-- **Not confirmed yet:** CI has to run on GitHub after a push to prove it.
+- **Result:** CI ran green on GitHub after the push (3 of 3 runs).
 
 ## Also
 
 - `.gitignore` now ignores `00_Temp_patches/`.
 - Local git setting `core.autocrlf=false` and LF line endings, so `format:check` passes on Windows.
+
+# Phase 3 (SRS and docs)
+
+## 6. SRS rewritten
+
+- **What:** `docs/01-SRS.md` now contains only functional and non-functional requirements, grouped by
+  feature. FR-1..FR-27 keep their IDs. NFRs reworded to what the code and tests show: NFR-1 (the
+  benchmark times in-memory ranking only), NFR-5 (axe scan of five public pages, keyboard search flow),
+  NFR-6 (health check instead of 99 % availability). Added NFR-10 (auth rate limit) and NFR-11 (CORS).
+- **Why:** the brief asks for FR and NFR only, and some claims (99 % availability, WCAG AA, p95 for the
+  endpoint) could not be backed by anything in the repo.
+- **Files:** `docs/01-SRS.md`.
+
+## 7. Other docs brought in line
+
+- **What:** `05-api.md` (CORS, JWT secret, `RATE_LIMITED`), `06-test-plan.md` (no web unit tests, real CI
+  steps, T-47 and T-48, results), `08-report.md` (real test counts and coverage, honest perf and
+  accessibility wording), `07-project-plan.md` (assignment phases), new `docs/README.md` index.
+- **Tests renamed:** the JWT secret test is now `T-47` and the rate limit test `T-48`, so the test plan
+  and the code use the same IDs. No logic changed.
+- **Files:** `docs/05-api.md`, `docs/06-test-plan.md`, `docs/07-project-plan.md`, `docs/08-report.md`,
+  `docs/README.md`, `apps/api/test/auth.int.test.ts`, `apps/api/test/auth.secret.test.ts`.

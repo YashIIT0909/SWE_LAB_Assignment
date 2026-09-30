@@ -102,7 +102,7 @@ describe('auth', () => {
     expect(res.body.error.code).toBe('VALIDATION_ERROR')
   })
 
-  it('rate limits auth routes when enabled', async () => {
+  it('T-48 rate limits auth routes when enabled', async () => {
     for (let i = 0; i < 20; i++) {
       await request(app)
         .post('/api/v1/auth/login')

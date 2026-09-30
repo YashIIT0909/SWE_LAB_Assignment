@@ -28,6 +28,7 @@ Every non-2xx response has this shape:
 | `UNAUTHENTICATED` | 401 | Missing, malformed or expired token on a login/cataloguer endpoint. |
 | `FORBIDDEN` | 403 | Valid token but role is not `CATALOGUER`. |
 | `NOT_FOUND` | 404 | Referenced resource does not exist (also unknown routes). |
+| `RATE_LIMITED` | 429 | More than 20 `POST /auth/register` or `POST /auth/login` requests from one IP in 15 minutes. Sends `Retry-After`. |
 | `EMAIL_TAKEN` | 409 | Register with an existing email. |
 | `DUPLICATE_NAME` | 409 | Notation name exists; sibling category with same name exists. |
 | `CATEGORY_NOT_EMPTY` | 409 | Delete a category with children or components and no `reassignTo`. |
@@ -38,6 +39,16 @@ Every non-2xx response has this shape:
 Every endpoint can return `VALIDATION_ERROR` and `INTERNAL_ERROR`; every login endpoint can
 return `UNAUTHENTICATED`; every cataloguer endpoint can additionally return `FORBIDDEN`. The
 per-endpoint tables below list the remaining codes.
+
+### Security rules
+
+- **JWT secret:** tokens are signed (HS256) with `JWT_SECRET`. The API has no default; without the
+  variable it cannot issue a token.
+- **CORS:** the API sends CORS headers only to origins listed in `WEB_ORIGIN` (comma separated), to
+  `http://localhost:*` and to `*.vercel.app`. If `WEB_ORIGIN` is unset or contains `*`, every origin is
+  allowed. Requests with no `Origin` header (curl, server to server) are not affected.
+- **Rate limit:** `POST /auth/register` and `POST /auth/login` allow 20 requests per IP per 15
+  minutes, then return `429 RATE_LIMITED`. The counter lives in process memory.
 
 ### Pagination
 

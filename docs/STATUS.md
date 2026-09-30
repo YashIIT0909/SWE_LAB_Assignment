@@ -227,7 +227,7 @@ Log in as the seeded cataloguer using `SEED_CATALOGUER_EMAIL` / `SEED_CATALOGUER
   `prisma generate`, which loads `prisma.config.ts`, which required `DIRECT_URL`. Now falls back to an
   empty string, since generating the client needs no database.
 - **FIXED (Phase 2, item 5): CI was red.** Run #8 failed at `npx prisma db seed` because `ci.yml` did
-  not set `SEED_CATALOGUER_EMAIL` / `SEED_CATALOGUER_PASSWORD`. Added. Needs a push to confirm green.
+  not set `SEED_CATALOGUER_EMAIL` / `SEED_CATALOGUER_PASSWORD`. Added. CI is green after the push.
 
 ### 12.2 Security shortcuts (good viva material, decide in Phase 2)
 - **FIXED (Phase 2, item 2):** `auth.service.ts` `secret()` used to fall back to a **hard-coded JWT
@@ -249,10 +249,11 @@ Log in as the seeded cataloguer using `SEED_CATALOGUER_EMAIL` / `SEED_CATALOGUER
 - No unit tests for the web app (only E2E). Enough for "testing exists", as the assignment asks.
 
 ### 12.4 Docs vs code and assignment (feeds Phases 3-4, nothing changed yet)
-- **SRS** (`docs/01-SRS.md`) is full IEEE 830 (intro, interfaces, traceability). The assignment asks
-  for **FR and NFR only**. FR-1..FR-27 match the code well. NFR issues: NFR-2 false (hard-coded
-  secret fallback), NFR-6 (99 % availability) cannot be honestly claimed for a local demo, NFR-5
-  claims more (WCAG AA, 360 px) than the axe scan proves, rate limiting is not listed.
+- **FIXED (Phase 3): SRS** (`docs/01-SRS.md`) was full IEEE 830 and had NFR problems. It now has FR
+  and NFR only (FR IDs unchanged). NFR-1 says the benchmark times in-memory ranking, NFR-2 is true
+  after Phase 2, NFR-5 lists what the axe scan and E2E flows cover, the 99 % availability claim became a
+  health-check requirement (NFR-6), and rate limiting (NFR-10) and CORS (NFR-11) were added.
+  `06-test-plan.md`, `08-report.md` and `05-api.md` were corrected to match.
 - **Use case diagram** (`docs/02-use-cases.md`) is a Mermaid *flowchart* imitating UML (Mermaid has
   no real use case diagram). Needs PlantUML for proper actor / system boundary / include / extend
   notation. "View component details" (FR-3) has no use case.

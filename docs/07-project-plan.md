@@ -17,6 +17,21 @@ schema -> service -> route -> web screen, so every endpoint ships with the scree
 | 8 | Release | `prisma migrate deploy` in deploy, Supabase production DB, production seed | Vercel production build and env wiring | T-01..T-46 on the Vercel deployment | all |
 | 9 | Report | - | - | Final report, screenshots, demo script, traceability filled | - |
 
+## Assignment phases (Assignment 8, deadline 1 Oct 2026)
+
+After the team's build phases above, the project was taken over and prepared for submission in
+these phases (brief in `docs/ASSIGNMENT_CONTEXT.md`).
+
+| # | Phase | Status | Where |
+|---|---|---|---|
+| 0 | Orientation: read the repo, verify it runs | Done | `docs/STATUS.md` |
+| 1 | Walkthrough of the system (explained in chat, produces no file) | Not tracked here | - |
+| 2 | Get it running and demo-able: fixes and seed data | Done, CI green | `docs/CHANGELOG_MINE.md` |
+| 3 | SRS: functional and non-functional requirements from the real system | Done | `docs/01-SRS.md` |
+| 4 | UML: use case and class diagrams that match the code | To do | `docs/02-use-cases.md`, `docs/04-design.md` |
+| 5 | PPT compared with the final code, SRS and UML | To do | outside the repo |
+| 6 | Viva preparation | To do | - |
+
 ## Environments
 
 | Env | Database | How |

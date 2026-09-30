@@ -2,7 +2,7 @@
 
 **Course**: Software Engineering Lab  
 **System**: Software Component Cataloguing System (SCCS)  
-**Standard**: IEEE Std 830-1998 aligned  
+**Requirements**: `docs/01-SRS.md` (functional and non-functional requirements)  
 **Tech Stack**: Next.js 16 (App Router), React 19, TypeScript (strict), Express 5, Prisma 7, PostgreSQL, Tailwind CSS, Playwright, Vitest  
 
 ---
@@ -23,7 +23,7 @@ The system implements the complete requirements set out in the problem statement
 
 ## 2. Requirement Traceability Matrix
 
-Every requirement identified in `docs/01-SRS.md` traces directly to use cases, API routes, automated tests, and implementation source files:
+Every functional requirement in `docs/01-SRS.md` traces to use cases, API routes, automated tests, and implementation source files (each NFR lists its own check in the SRS table). The use case IDs refer to `docs/02-use-cases.md`, which is being redone in the UML phase:
 
 | FR ID | Description | Use Case | API Endpoint | Test ID | Verification File | Implementation File(s) |
 |---|---|---|---|---|---|---|
@@ -61,15 +61,15 @@ Every requirement identified in `docs/01-SRS.md` traces directly to use cases, A
 
 ### 3.1 Unit & Integration Test Coverage
 - **Runner**: Vitest v4.1 with `@vitest/coverage-v8`
-- **Total Test Files**: 8 files
-- **Total Unit & Integration Tests**: 55 tests
-- **Result**: **100% Passed (55/55)**
-- **Service Line Coverage**: **99.61%** (exceeds the 80% CI threshold requirement)
-- **Overall Line Coverage**: **99.75%**
+- **Total Test Files**: 9 files in `apps/api` (plus 1 in `packages/shared`)
+- **Total Unit & Integration Tests**: 56 in `apps/api` (plus 5 in `packages/shared`)
+- **Result**: **all passing** (last run 30 Sep 2026, and the same suite is green in CI)
+- **Service Line Coverage**: **99.61%** (threshold: 80%)
+- **Overall Line Coverage** (`apps/api`): **98.31%** (threshold: 70%)
 
 ### 3.2 Performance Verification (NFR-1 / T-40)
-- **Benchmark Target**: p95 server response latency $< 500\text{ ms}$ over 10,000 components and 5,000 keywords across 200 random search queries (alternating `any` and `all` modes).
-- **Observed Result**: p95 latency was **$\approx 1.2\text{ ms}$**, vastly exceeding the performance requirement.
+- **Benchmark Target**: p95 time of the ranking function `rank()` $< 500\text{ ms}$ over 10,000 components and 5,000 keywords across 200 random searches (alternating `any` and `all` modes).
+- **Result**: the test passes. It times the scoring code in process only, so database and network time are not included, and browse or detail endpoints are not measured.
 
 ### 3.3 End-to-End (E2E) & Accessibility Verification
 - **Framework**: Playwright 1.63 + `@axe-core/playwright`
@@ -144,5 +144,7 @@ npm run dev
 - **Strict Input Validation**: Every endpoint guarded by shared Zod schemas preventing parameter injection, negative limits, or overlong payloads.
 - **Relational Integrity**: Foreign keys enforce cascading deletions of component keywords, search results, and usage logs when a component is deleted.
 - **Cycle & Duplicate Prevention**: Postgres transactions and recursive queries prevent circular category parentage and duplicate names at root or sibling levels.
-- **Sliding-Window Rate Limiting**: Brute-force protection applied to `/auth/login` and `/auth/register` (max 20 requests per 15-minute window per IP) returning standard HTTP `429 RATE_LIMITED` with `Retry-After` headers.
-- **Inclusive Design**: Full WCAG 2.1 AA accessibility compliance confirmed by automated Axe scans and tab-order keyboard traversals.
+- **No Default Secret**: the JWT signing secret comes only from `JWT_SECRET`; the API refuses to issue tokens without it (T-47).
+- **Fixed-Window Rate Limiting**: Brute-force protection applied to `/auth/login` and `/auth/register` (max 20 requests per 15-minute window per IP) returning HTTP `429 RATE_LIMITED` with `Retry-After` headers (T-48). The counter is in process memory, so it is not shared between serverless instances.
+- **CORS Allow-List**: browsers from other origins than `WEB_ORIGIN`, `localhost` and `*.vercel.app` get no CORS headers.
+- **Accessibility**: no axe violations on the five public pages, and the search flow works by keyboard alone. A full WCAG audit, the console pages and a 360 px layout were not checked.

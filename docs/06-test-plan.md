@@ -3,8 +3,8 @@
 ## 1. Scope and objectives
 
 Verify every functional requirement FR-1..FR-27 and the testable non-functional requirements
-of `docs/01-SRS.md`. The test case IDs below (T-01..T-46) are the ones in the SRS traceability
-matrix. Each implementing phase names its test files after the IDs (for example
+of `docs/01-SRS.md`. The test case IDs below (T-01..T-48) are the ones in the traceability matrix
+of `docs/08-report.md`. Each implementing phase names its test files after the IDs (for example
 `it("T-21 search increments hit counters for page items only", ...)`) so the matrix can be
 checked with a grep.
 
@@ -15,10 +15,10 @@ checked with a grep.
 | Level | What | Tooling | Where |
 |---|---|---|---|
 | Unit | Pure functions: keyword normalisation, search scoring and ordering, purge-criteria builder, slug generation, category cycle check, zod schemas | Vitest | `apps/api/src/**/*.test.ts`, `packages/shared/src/**/*.test.ts` |
-| Unit (UI) | Components: search form, keyword chip input, category tree, pagination, error display | Vitest + Testing Library (jsdom) | `apps/web/**/*.test.tsx` |
+| Unit (UI) | Not implemented: the web app has no unit tests; its behaviour is covered at the end-to-end level | - | - |
 | Integration | Each endpoint through the Express app against a real PostgreSQL test database (migrated, truncated between tests, seeded per test) | Vitest + Supertest | `apps/api/test/*.int.test.ts` |
 | End-to-end | Full user journeys in a browser against web + api + database | Playwright (+ `@axe-core/playwright`) | `apps/web/e2e/*.spec.ts` |
-| Performance | Search latency with a generated 10,000-component dataset | Vitest bench script / autocannon | `apps/api/test/perf/` |
+| Performance | Ranking time of the search scorer on a generated 10,000-component, 5,000-keyword dataset (in process; no database or HTTP) | Vitest | `apps/api/test/perf/` |
 
 Integration tests use a dedicated database (`DATABASE_URL_TEST`: a Postgres service container in CI or a local
 Postgres via Docker). They never run against production.
@@ -117,13 +117,15 @@ equivalence class, BVA boundary value), WB white box.
 | T-37 | FR-20 | I, U | BVA | Candidates at each threshold boundary (see 2.2) | Included exactly at boundary, excluded one step past |
 | T-38 | FR-21, FR-22 | I | EC | Purge 2 ids where one was used after listing, plus one unknown id | 1 deleted, 2 skipped with reasons; audit `COMPONENT_PURGE` |
 | T-39 | FR-22 | I | EC | Perform one of each write, then `GET /reports/audit` with filters | One row per write, newest first, filter works |
-| T-40 | NFR-1 | P | BB | 10,000 components, 5,000 keywords, 200 random searches (2 terms, any/all) | Server p95 < 500 ms |
+| T-40 | NFR-1 | P | BB | 10,000 candidate components, 5,000 keywords, 200 random runs of the `rank()` function (2 terms, any/all) | p95 < 500 ms (in process; database and network time not measured) |
 | T-41 | FR-14, FR-17, NFR-5 | E | BB | User registers, browses to a category, searches, opens result, clicks Use | Counters shown updated; journey <= 3 screens from search to use |
 | T-42 | FR-8, FR-9, FR-10 | E | BB | Cataloguer logs in, adds component with keywords, edits it, deletes it | Each change visible in UI and lists |
 | T-43 | FR-19, FR-21 | E | BB | Cataloguer opens reports, runs purge on a seeded never-used component | Component gone from browse and search |
 | T-44 | FR-13, NFR-2 | I | WB | Inspect DB after register; inspect every user-returning response | `passwordHash` is bcrypt (`$2`), never in responses |
-| T-45 | NFR-5 | E | BB | axe scan of home, search, browse, detail, login, console pages; keyboard-only search and use | No serious/critical violations; flow completes by keyboard |
+| T-45 | NFR-5 | E | BB | axe scan of `/`, `/search`, `/browse`, `/login`, `/register`; keyboard-only search flow | No serious/critical violations; flow completes by keyboard |
 | T-46 | FR-3 | I | EC | `GET /components/:id` existing and unknown | Detail with content, notation, breadcrumb, keywords, createdBy; 404 |
+| T-47 | NFR-2 | U | WB | `sign()` called with `JWT_SECRET` removed from the environment | Throws `JWT_SECRET is not set`; no token is issued |
+| T-48 | NFR-10 | I | BVA | 21 login requests from one IP with the limiter enabled | The 21st gets 429 `RATE_LIMITED` with a `Retry-After` header |
 
 ## 4. Entry and exit criteria
 
@@ -152,13 +154,25 @@ migrated or CI is red on `main`; it resumes when the blocking fix is merged.
 |---|---|
 | Unit and integration runner | Vitest (+ `@vitest/coverage-v8`) |
 | HTTP integration | Supertest against `app.ts` (no network listener) |
-| UI unit | Testing Library + jsdom |
+| UI unit | not used |
 | End-to-end, accessibility | Playwright, `@axe-core/playwright` |
-| Performance | seed generator script + timed requests (autocannon or Vitest bench) |
+| Performance | Vitest test timing the ranking function |
 | Database | PostgreSQL 16 (service container in CI, local Postgres or Docker locally) |
-| CI | GitHub Actions: install, lint, typecheck, test (with Postgres service), build |
+| CI | GitHub Actions: install, lint, format check, typecheck, migrate, test (with Postgres service), web build, seed, E2E |
 
 ## 6. Defect management
 
 Defects are GitHub issues labelled `bug` with severity (`critical`, `high`, `medium`, `low`), the
 failing test ID and steps to reproduce. A fix PR adds or updates a test with that ID.
+
+## 7. Results (30 Sep 2026)
+
+| Level | Result |
+|---|---|
+| Shared package unit tests | 5 passed |
+| API unit and integration tests | 56 passed in 9 files (`npm test`), line coverage 98.31 % overall, 99.61 % for services |
+| End-to-end (Playwright, Chromium) | 9 passed (T-41, T-42, T-43, T-45 with 6 axe and keyboard tests) |
+| CI (GitHub Actions) | green on `main` |
+
+Checked by hand, not automated: CORS behaviour (allowed and unknown origins over real HTTP) and the
+purge candidates listing with default parameters after seeding. The web app has no unit tests.
