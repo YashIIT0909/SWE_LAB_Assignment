@@ -5,49 +5,39 @@ A Cataloguer is a specialised User; a User is a logged-in Visitor.
 
 ## Use case diagram
 
-```mermaid
-flowchart LR
-    visitor(["Visitor"])
-    user(["User"])
-    cat(["Cataloguer"])
+![Use case diagram](diagrams/use-case.png)
 
-    subgraph sys["Software Component Cataloguing System"]
-        direction TB
-        uc1(["UC-1 Register / Login"])
-        uc6(["UC-6 Query by keywords"])
-        uc8(["UC-8 Browse category"])
-        uc7(["UC-7 Use component"])
-        uc2(["UC-2 Add component"])
-        uc3(["UC-3 Edit component"])
-        uc4(["UC-4 Delete component"])
-        uc5(["UC-5 Associate keywords"])
-        uc9(["UC-9 Manage categories"])
-        uc12(["UC-12 Manage notations"])
-        uc10(["UC-10 View usage report"])
-        uc11(["UC-11 Purge unused components"])
-    end
+Source: `diagrams/use-case.puml` (PlantUML). Notation:
 
-    visitor --- uc1
-    visitor --- uc6
-    visitor --- uc8
-    user --- uc7
-    cat --- uc2
-    cat --- uc3
-    cat --- uc4
-    cat --- uc5
-    cat --- uc9
-    cat --- uc12
-    cat --- uc10
-    cat --- uc11
+- **Actor generalization** (hollow-triangle arrow): a User is a Visitor who is logged in, and a
+  Cataloguer is a User with extra privileges. A Cataloguer can therefore also do UC-7.
+- **«extend»** (dashed arrow pointing at the base use case): the extending use case is optional and
+  adds behaviour to the base one at an extension point.
+  - UC-7 Use component extends UC-6 and UC-13: the "Use this component" button on a search result
+    or on a detail page.
+  - UC-13 View component details extends UC-6 and UC-8: opening one result or one list entry.
+  - UC-5 Associate keywords extends UC-2 and UC-3: keywords are optional when a component is
+    created (FR-8), and are edited with the same form.
+- There is no «include» in this system. Every use case can be completed on its own.
 
-    user -. "is a" .-> visitor
-    cat -. "is a" .-> user
+| Use case | Actors | Requirements |
+|---|---|---|
+| UC-1 Register / Login | Visitor | FR-13 |
+| UC-2 Add component | Cataloguer | FR-2, FR-4, FR-7, FR-8, FR-11 |
+| UC-3 Edit component | Cataloguer | FR-7, FR-9 |
+| UC-4 Delete component | Cataloguer | FR-10 |
+| UC-5 Associate keywords | Cataloguer | FR-11, FR-16 |
+| UC-6 Query by keywords | Visitor, User, Cataloguer | FR-14, FR-15, FR-16, FR-18 |
+| UC-7 Use component | User, Cataloguer | FR-17, FR-18 |
+| UC-8 Browse category | Visitor, User, Cataloguer | FR-25, FR-26, FR-27 |
+| UC-9 Manage categories | Cataloguer | FR-23, FR-24 |
+| UC-10 View usage report | Cataloguer | FR-19 |
+| UC-11 Purge unused components | Cataloguer | FR-20, FR-21 |
+| UC-12 Manage notations | Cataloguer | FR-5, FR-6, FR-7 |
+| UC-13 View component details | Visitor, User, Cataloguer | FR-3 |
+| UC-14 View audit log | Cataloguer | FR-22 |
 
-    uc2 -. "include" .-> uc5
-    uc6 -. "extend" .-> uc7
-    uc8 -. "extend" .-> uc7
-    uc11 -. "include" .-> uc10
-```
+Every catalogue write (UC-2 to UC-5, UC-9, UC-11, UC-12) also writes an audit row (FR-22).
 
 ## UC-1 Register / Login
 
@@ -168,7 +158,7 @@ flowchart LR
 1. Actor enters one or more keywords (autocomplete helps), chooses match mode "any" or "all", optionally filters by kind, notation or category.
 2. System validates, scores components, orders by score, useCount, name, and returns the requested page with `queryId`, matched keywords and score.
 3. System records the query and the hit counters for that page in one transaction.
-4. Actor reads the results and may open a component (view details) and use it (extends to UC-7 with `queryId`).
+4. Actor reads the results and may open a component (UC-13) and use it (UC-7 extends UC-6 and carries the `queryId`).
 
 **Alternate flows**
 - 2a. No keywords or more than 10: `VALIDATION_ERROR`.
@@ -200,7 +190,7 @@ flowchart LR
 | | |
 |---|---|
 | Actors | Visitor, User, Cataloguer |
-| Requirements | FR-3, FR-25, FR-26, FR-27 |
+| Requirements | FR-25, FR-26, FR-27 |
 | Preconditions | None. |
 | Postconditions | None (browsing does not change counters). |
 
@@ -208,12 +198,12 @@ flowchart LR
 1. Actor opens "Browse"; system shows the category tree with component counts.
 2. Actor selects a category; system shows its breadcrumb, child categories and a paginated component list.
 3. Actor toggles "include subcategories", changes sort (name, newest, most used) or page.
-4. Actor opens a component to view its details (notation, category breadcrumb, keywords, counters).
+4. Actor opens a component to see its details (UC-13).
 
 **Alternate flows**
 - 2a. Category does not exist: `NOT_FOUND` page with a link back to the tree.
 - 2b. Category is empty: an empty-state message.
-- 4a. Actor decides to use it: extends to UC-7 (no `queryId`).
+- 4a. Actor decides to use it: UC-7 from the detail page (no `queryId`).
 
 ## UC-9 Manage categories
 
@@ -242,14 +232,14 @@ flowchart LR
 | | |
 |---|---|
 | Actors | Cataloguer |
-| Requirements | FR-19, FR-22 |
+| Requirements | FR-19 |
 | Preconditions | Cataloguer is logged in. |
 | Postconditions | None. |
 
 **Main flow**
 1. Cataloguer opens Reports.
 2. System shows totals (components, by kind, keywords, categories, searches, uses), top 10 most used, top 10 most hit-not-used, and the count of never-used components.
-3. Cataloguer opens the Audit tab; system lists audit entries newest first, paginated.
+3. For the change history, the cataloguer moves to the audit log (UC-14).
 
 **Alternate flows**
 - 2a. Empty catalogue: zeros and empty lists.
@@ -291,3 +281,38 @@ flowchart LR
 
 **Alternate flows**
 - 3a. Name already exists: `DUPLICATE_NAME`.
+
+## UC-13 View component details
+
+| | |
+|---|---|
+| Actors | Visitor, User, Cataloguer |
+| Requirements | FR-3 |
+| Relationships | Extends UC-6 (from a search result) and UC-8 (from a category list). UC-7 extends it. |
+| Preconditions | The component exists. Login is not needed. |
+| Postconditions | None (viewing does not change counters). |
+
+**Main flow**
+1. Actor opens a component from a search result or a category list.
+2. System shows name, description, kind, notation, category breadcrumb, keywords, version, author, source URL, content and the usage counters.
+3. If the actor is logged in, the page offers "Use this component" (UC-7).
+
+**Alternate flows**
+- 1a. The component does not exist (for example, it was purged): `NOT_FOUND` page with a link back to browsing.
+
+## UC-14 View audit log
+
+| | |
+|---|---|
+| Actors | Cataloguer |
+| Requirements | FR-22 |
+| Preconditions | Cataloguer is logged in. |
+| Postconditions | None. |
+
+**Main flow**
+1. Cataloguer opens the Audit page of the console.
+2. System lists audit entries newest first, paginated, with columns When, Who (actor name), Action (for example `COMPONENT_CREATE`, `KEYWORDS_UPDATE`, `COMPONENT_PURGE`), Entity (type and id) and Details.
+3. Cataloguer can filter the list by action.
+
+**Alternate flows**
+- 2a. No entries yet: empty list.

@@ -254,17 +254,15 @@ Log in as the seeded cataloguer using `SEED_CATALOGUER_EMAIL` / `SEED_CATALOGUER
   after Phase 2, NFR-5 lists what the axe scan and E2E flows cover, the 99 % availability claim became a
   health-check requirement (NFR-6), and rate limiting (NFR-10) and CORS (NFR-11) were added.
   `06-test-plan.md`, `08-report.md` and `05-api.md` were corrected to match.
-- **Use case diagram** (`docs/02-use-cases.md`) is a Mermaid *flowchart* imitating UML (Mermaid has
-  no real use case diagram). Needs PlantUML for proper actor / system boundary / include / extend
-  notation. "View component details" (FR-3) has no use case.
-- **Class diagram** (`docs/04-design.md` section 4) mostly matches the entities but the service part
-  is wrong: `ComponentService.createNotation/listNotations` (really `notation.service.ts`),
-  `KeywordService.normalise` (does not exist; normalisation is in the shared zod schema),
-  `CategoryService.listComponents` (really `component.service.ts list`), `ReportService.audit`
-  (really `auditLog`), and `NotationService`, `AuditService`, `HealthService` are missing. Missing
-  associations: User-SearchQuery, User-UsageEvent, SearchQuery-UsageEvent. `ComponentKeyword` should
-  appear as an association class. Services are modules of functions, not classes (to be shown as
-  `<<service>>` classes and explained in the viva).
+- **FIXED (Phase 4): use case diagram.** It was a Mermaid flowchart imitating UML. It is now a
+  PlantUML use case diagram (`docs/diagrams/use-case.puml`) with actor generalization and correct
+  «extend» directions. UC-13 View component details (FR-3) and UC-14 View audit log (FR-22) were added,
+  and the false «include» between purge and report was removed.
+- **FIXED (Phase 4): class diagram.** `docs/04-design.md` section 4 now has two PlantUML diagrams: the
+  domain model (`schema.prisma`, with `SearchResult` and `ComponentKeyword` as association classes)
+  and the backend layers (real imports, `NotationService`, `AuditService` and `HealthService` added,
+  the non-existent `KeywordService.normalise` and `CategoryService.listComponents` removed). The
+  sequence diagrams in section 5 were corrected the same way.
 
 ## 13. Top uncertainties for you to verify by running the app
 

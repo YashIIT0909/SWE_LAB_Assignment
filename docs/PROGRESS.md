@@ -13,4 +13,5 @@
 | 8 Release | Ready | Vercel deployment entrypoint (`apps/api/api/index.ts`) and `vercel.json` routing prepared; `prisma migrate deploy` and seed configured; ready for cloud credentials if deploying live. |
 | Assignment Phase 2 | Done | Demo-ready fixes after taking over: `prisma generate` without `.env`, no hard-coded JWT secret, working CORS allow-list, stale demo components for the purge page, seed variables in CI. Details in `docs/CHANGELOG_MINE.md`. CI is green on GitHub (3 of 3 runs). |
 | Assignment Phase 3 | Done | SRS rewritten (FR and NFR only, honest NFRs), test plan, report and API doc corrected, `docs/README.md` index added. UML (phase 4) and PPT (phase 5) still to do. |
+| Assignment Phase 4 | Done | UML in PlantUML (`docs/diagrams/`): use case diagram UC-1..UC-14, domain class diagram, backend class diagram. `02-use-cases.md`, `04-design.md` and the report matrix updated. PPT (phase 5) still to do. |
 | 9 Report | Done | Final project report (`docs/08-report.md`) with complete requirement traceability matrix (FR-1..FR-27 to tests and files), test verification summary, live demo script, and security overview. |

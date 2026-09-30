@@ -23,13 +23,13 @@ The system implements the complete requirements set out in the problem statement
 
 ## 2. Requirement Traceability Matrix
 
-Every functional requirement in `docs/01-SRS.md` traces to use cases, API routes, automated tests, and implementation source files (each NFR lists its own check in the SRS table). The use case IDs refer to `docs/02-use-cases.md`, which is being redone in the UML phase:
+Every functional requirement in `docs/01-SRS.md` traces to use cases, API routes, automated tests, and implementation source files (each NFR lists its own check in the SRS table). The use case IDs refer to `docs/02-use-cases.md` (UC-1 to UC-14):
 
 | FR ID | Description | Use Case | API Endpoint | Test ID | Verification File | Implementation File(s) |
 |---|---|---|---|---|---|---|
 | **FR-1** | Persistent component catalogue | UC-2, UC-8 | `GET /health`, `/components` | T-01, T-07 | `health.int.test.ts`, `components.int.test.ts` | `src/services/component.service.ts` |
 | **FR-2** | Full component metadata | UC-2 | `POST /components`, `GET /components/:id` | T-07, T-09 | `components.int.test.ts` | `src/services/component.service.ts` |
-| **FR-3** | Public component viewing | UC-8, UC-6 | `GET /components/:id` | T-46 | `components.int.test.ts` | `apps/web/app/components/[id]/page.tsx` |
+| **FR-3** | Public component viewing | UC-13 | `GET /components/:id` | T-46 | `components.int.test.ts` | `apps/web/app/components/[id]/page.tsx` |
 | **FR-4** | Binary kind (`DESIGN` vs `CODE`) | UC-2 | `POST /components` | T-07, T-09 | `components.int.test.ts` | `packages/shared/src/schemas.ts` |
 | **FR-5** | Design notations (UML, ERD, etc.) | UC-12 | `GET /notations?kind=DESIGN` | T-14 | `categories.int.test.ts` | `src/services/notation.service.ts` |
 | **FR-6** | Code notations (Java, Python, etc.)| UC-12 | `GET /notations?kind=CODE` | T-14 | `categories.int.test.ts` | `src/services/notation.service.ts` |
@@ -48,7 +48,7 @@ Every functional requirement in `docs/01-SRS.md` traces to use cases, API routes
 | **FR-19**| Cataloguer summary reports | UC-10 | `GET /reports/summary` | T-36, T-43 | `reports.int.test.ts`, `t43-purge-flow.spec.ts` | `apps/web/app/console/page.tsx` |
 | **FR-20**| Purge candidate query | UC-11 | `GET /reports/purge-candidates` | T-37 | `reports.int.test.ts` | `src/services/report.service.ts` |
 | **FR-21**| Purge execution & re-verification| UC-11 | `POST /reports/purge` | T-38, T-43 | `reports.int.test.ts`, `t43-purge-flow.spec.ts` | `apps/web/app/console/purge/page.tsx` |
-| **FR-22**| Comprehensive audit logging | UC-10 | `GET /reports/audit` | T-39 | `reports.int.test.ts` | `apps/web/app/console/audit/page.tsx` |
+| **FR-22**| Comprehensive audit logging | UC-14 | `GET /reports/audit` | T-39 | `reports.int.test.ts` | `apps/web/app/console/audit/page.tsx` |
 | **FR-23**| Category hierarchy management | UC-9 | `POST /categories`, `PATCH /categories/:id` | T-31, T-32 | `categories.int.test.ts` | `apps/web/app/console/categories/page.tsx` |
 | **FR-24**| Category deletion with reassign | UC-9 | `DELETE /categories/:id?reassignTo=` | T-33 | `categories.int.test.ts` | `src/services/category.service.ts` |
 | **FR-25**| Category browsing & tree view | UC-8 | `GET /categories/tree`, `GET /categories/:id` | T-28, T-29 | `categories.int.test.ts` | `apps/web/app/browse/[[...id]]/page.tsx` |

@@ -76,3 +76,24 @@ and the Playwright E2E suite (9 of 9 passing).
   and the code use the same IDs. No logic changed.
 - **Files:** `docs/05-api.md`, `docs/06-test-plan.md`, `docs/07-project-plan.md`, `docs/08-report.md`,
   `docs/README.md`, `apps/api/test/auth.int.test.ts`, `apps/api/test/auth.secret.test.ts`.
+
+# Phase 4 (UML)
+
+## 8. UML diagrams in PlantUML
+
+- **What:** new `docs/diagrams/` folder with editable `.puml` sources and PNG and SVG exports:
+  a use case diagram (UC-1 to UC-14), a domain class diagram taken from `schema.prisma`, and a backend
+  class diagram of routes, middleware, controllers and services drawn from the real imports.
+- **Why:** the old use case diagram was a Mermaid flowchart imitating UML, with wrong «extend» directions
+  and a false «include». The old class diagram had operations on the wrong services and missed several
+  services and associations.
+- **Files:** `docs/diagrams/*`.
+
+## 9. Docs updated for the diagrams
+
+- **What:** `02-use-cases.md` (new diagram and table, UC-13 and UC-14, UC-10 split), `04-design.md`
+  (section 4 rewritten with a relationship table, layer table and source layout corrected, CORS line,
+  `/console/reports` fixed, three sequence diagrams corrected), `08-report.md` (FR-3 to UC-13, FR-22 to
+  UC-14), `README.md` index.
+- **Files:** `docs/02-use-cases.md`, `docs/04-design.md`, `docs/08-report.md`, `docs/README.md`,
+  `docs/07-project-plan.md`, `docs/STATUS.md`, `docs/PROGRESS.md`.

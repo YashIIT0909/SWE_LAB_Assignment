@@ -22,7 +22,8 @@ flowchart LR
 
 - The browser calls the API directly for authenticated and mutating requests (token kept in
   memory + `localStorage`); Next.js server components may call public read endpoints for SSR.
-- CORS on the API allows only `WEB_ORIGIN`.
+- CORS on the API allows the origins in `WEB_ORIGIN`, `http://localhost:*` and `*.vercel.app` (everything if
+  `WEB_ORIGIN` is unset or contains `*`); other browsers' origins get no CORS headers.
 - Supabase's pooled connection string (`DATABASE_URL`, Supavisor port 6543 with
   `?pgbouncer=true`) is used at runtime; the direct string (port 5432)
   (`DIRECT_URL`) is used by `prisma migrate`.
@@ -34,7 +35,7 @@ flowchart LR
 ```mermaid
 flowchart TB
     R["Routes - routers per resource, mount under /api/v1"]
-    MW["Middleware - json, cors, authenticate, requireRole, validate, errorHandler"]
+    MW["Middleware - json, cors, authenticate, requireLogin / requireCataloguer, rateLimit, errorHandler"]
     C["Controllers - parse dto with shared zod schema, call service, shape response"]
     S["Services - business rules, transactions, counters, audit"]
     P["Prisma client (lib/prisma.ts)"]
@@ -49,26 +50,28 @@ flowchart TB
 | Layer | Responsibility | May import |
 |---|---|---|
 | routes | HTTP method + path -> middleware chain -> controller | middleware, controllers |
-| middleware | auth (JWT -> `req.user`), role check, zod validation, error -> JSON shape | shared, errors |
-| controllers | read `req`, call exactly one service method, `res.status().json()` | services, shared |
+| middleware | auth (JWT -> `req.user`), role check, rate limit, error -> JSON shape | services (`verifyToken` only), errors |
+| controllers | parse `req` with the shared zod schema (there is no separate validate middleware), call the service, `res.status().json()` | services, shared |
 | services | all logic; `prisma.$transaction` for multi-write operations; throw `AppError` | prisma, shared, errors |
 | lib/prisma | single `PrismaClient` instance | - |
 
-Planned source layout:
+Source layout (as built):
 
 ```
 apps/api/src/
   app.ts                 express app (no listen) used by tests and the Vercel handler
   index.ts               local dev server
-  routes/{auth,categories,notations,components,keywords,search,reports}.ts
-  controllers/*.controller.ts
-  services/{auth,category,notation,component,keyword,search,usage,report,audit}.service.ts
-  middleware/{authenticate,requireRole,validate,errorHandler}.ts
+  serverless.ts          Vercel handler
+  routes/{auth,categories,components,health,keywords,notations,reports,search}.ts
+  controllers/{auth,category,component,keyword,notation,report,search}.controller.ts
+  services/{audit,auth,category,component,health,keyword,notation,report,search,usage}.service.ts
+  middleware/{auth,errorHandler,rateLimit}.ts
   lib/prisma.ts  errors.ts
 apps/api/prisma/{schema.prisma, seed.ts, migrations/}
 apps/web/app/            (public) /, /search, /browse/[[...id]], /components/[id], /login, /register
-                         (console) /console/components, /console/categories, /console/notations,
-                                   /console/reports, /console/purge, /console/audit
+                         (console) /console (reports dashboard), /console/components,
+                                   /console/categories, /console/notations, /console/purge,
+                                   /console/audit
 packages/shared/src/{schemas,types,constants}.ts
 ```
 
@@ -175,163 +178,61 @@ Indexes planned: `Component(categoryId)`, `Component(notationId)`,
 `Component(kind)`, `ComponentKeyword(keywordId)`, `Keyword(term)` (unique, also used with
 `text_pattern_ops` for prefix search), `UsageEvent(componentId)`, `AuditLog(createdAt)`.
 
-## 4. Class diagram
+## 4. Class diagrams
 
-```mermaid
-classDiagram
-    direction LR
-    class User {
-        +String id
-        +String name
-        +String email
-        +String passwordHash
-        +Role role
-        +DateTime createdAt
-    }
-    class Category {
-        +String id
-        +String name
-        +String slug
-        +String description
-        +String parentId
-        +DateTime createdAt
-        +DateTime updatedAt
-    }
-    class Notation {
-        +String id
-        +String name
-        +ComponentKind kind
-    }
-    class Component {
-        +String id
-        +String name
-        +String description
-        +ComponentKind kind
-        +String notationId
-        +String categoryId
-        +String version
-        +String author
-        +String sourceUrl
-        +String content
-        +String createdById
-        +int useCount
-        +int queryHitCount
-        +int queryHitNotUsedCount
-        +DateTime lastUsedAt
-        +DateTime createdAt
-        +DateTime updatedAt
-    }
-    class Keyword {
-        +String id
-        +String term
-    }
-    class SearchQuery {
-        +String id
-        +String userId
-        +String[] terms
-        +Json filters
-        +int resultCount
-        +DateTime createdAt
-    }
-    class SearchResult {
-        +String queryId
-        +String componentId
-        +int rank
-        +boolean used
-    }
-    class UsageEvent {
-        +String id
-        +String componentId
-        +String userId
-        +String queryId
-        +DateTime createdAt
-    }
-    class AuditLog {
-        +String id
-        +String actorId
-        +String action
-        +String entityType
-        +String entityId
-        +Json details
-        +DateTime createdAt
-    }
+Two class diagrams, both drawn in PlantUML (sources and exports in `diagrams/`, see
+`diagrams/README.md`): the **domain model** (the data the system stores) and the **backend design**
+(the code that works on it).
 
-    class AuthService {
-        +register(dto) AuthResult
-        +login(dto) AuthResult
-        +me(userId) User
-        +verifyToken(token) TokenPayload
-    }
-    class CategoryService {
-        +tree() CategoryNode[]
-        +get(id) CategoryDetail
-        +listComponents(id, query) Page
-        +create(dto, actor) Category
-        +update(id, dto, actor) Category
-        +remove(id, reassignTo, actor) void
-        +descendantIds(id) String[]
-    }
-    class ComponentService {
-        +list(query) Page
-        +get(id) ComponentDetail
-        +create(dto, actor) Component
-        +update(id, dto, actor) Component
-        +remove(id, actor) void
-        +createNotation(dto, actor) Notation
-        +listNotations(kind) Notation[]
-    }
-    class KeywordService {
-        +normalise(terms) String[]
-        +replace(componentId, terms, actor) Keyword[]
-        +add(componentId, terms, actor) Keyword[]
-        +remove(componentId, keywordId, actor) void
-        +suggest(prefix, limit) Keyword[]
-    }
-    class SearchService {
-        +search(dto, userId) SearchPage
-        -score(terms, keywords) int
-    }
-    class UsageService {
-        +use(componentId, userId, queryId) Counters
-    }
-    class ReportService {
-        +summary() Summary
-        +purgeCandidates(params) Component[]
-        +purge(ids, params, actor) PurgeResult
-        +audit(page, pageSize) Page
-    }
+### 4.1 Domain model
 
-    User "1" --> "*" Component : creates
-    Category "0..1" --> "*" Category : parent of
-    Category "1" --> "*" Component : classifies
-    Notation "1" --> "*" Component : expresses
-    Component "*" -- "*" Keyword : ComponentKeyword
-    SearchQuery "1" *-- "*" SearchResult
-    Component "1" --> "*" SearchResult
-    Component "1" *-- "*" UsageEvent
-    User "1" --> "*" AuditLog : actor
+![Domain class diagram](diagrams/class-domain.png)
 
-    AuthService ..> User
-    CategoryService ..> Category
-    CategoryService ..> AuditLog
-    ComponentService ..> Component
-    ComponentService ..> Notation
-    ComponentService ..> KeywordService
-    ComponentService ..> AuditLog
-    KeywordService ..> Keyword
-    SearchService ..> CategoryService
-    SearchService ..> SearchQuery
-    SearchService ..> SearchResult
-    SearchService ..> Component
-    UsageService ..> UsageEvent
-    UsageService ..> SearchResult
-    UsageService ..> Component
-    ReportService ..> Component
-    ReportService ..> AuditLog
-```
+Source: `diagrams/class-domain.puml`, derived from `apps/api/prisma/schema.prisma`. Attributes show
+the stored type; `[0..1]` marks optional fields. The two enumerations `Role` and `ComponentKind` are
+used as attribute types (`User.role`, `Notation.kind`, `Component.kind`).
 
-Notation management lives in `ComponentService` (it is only a lookup table); audit writes are a
-small helper called inside each service's transaction.
+| Relationship | UML kind | Multiplicity | Why it is drawn this way |
+|---|---|---|---|
+| User creates Component | association | 1 to 0..* | `Component.createdById` is required. |
+| Category classifies Component | association | 1 to 0..* | `Component.categoryId` is required, so a component is in exactly one category. |
+| Notation expresses Component | association | 1 to 0..* | `Component.notationId` is required; the kind of the notation must equal the kind of the component (checked in the service). |
+| Category has parent / children | aggregation, self-association | 0..1 parent to 0..* children | A category groups sub-categories, but a parent cannot be deleted while it still has children: they are reassigned first (`CATEGORY_NOT_EMPTY`). The children live on, so this is aggregation and not composition. |
+| Component described by Keyword | many-to-many with association class `ComponentKeyword` | 0..* to 0..* | The link row has its own identity (`componentId`, `keywordId`) and is deleted with the component (cascade). |
+| SearchQuery returns Component | many-to-many with association class `SearchResult` | 0..* to 0..* | The link carries data of its own, `rank` and `used`; it is what the "hit not used" counter is built from. It is deleted with either end (cascade). |
+| Component has UsageEvent | composition | 1 to 0..* | A usage event has no meaning without its component and is deleted with it (cascade). |
+| User runs SearchQuery, User triggers UsageEvent | association | 0..1 to 0..* | `userId` is optional: anonymous visitors can search, and the rows survive when a user is deleted (`SetNull`). |
+| SearchQuery led to UsageEvent | association | 0..1 to 0..* | `queryId` is optional: a use may come from a search or from a detail page. |
+| User performs AuditLog | association | 1 to 0..* | `AuditLog.actorId` is required. |
+
+There is no inheritance in the domain model. `Role` is an attribute of `User`, not a subclass, because
+the two kinds of user have the same data and differ only in what they may do.
+
+### 4.2 Backend design
+
+![Backend class diagram](diagrams/class-backend.png)
+
+Source: `diagrams/class-backend.puml`. A request goes routes, then middleware, controllers, services
+and the database, as in section 2. The arrows are the real imports:
+
+- Routes attach middleware (`authenticate` globally, `requireLogin` / `requireCataloguer` per route,
+  `rateLimit` on the two auth routes) and call one controller. The health route calls `HealthService`
+  directly and has no controller.
+- `auth` middleware depends on `AuthService.verifyToken` to turn the Bearer token into `req.user`.
+- Controllers call services. Two controllers call two services each: `ComponentController` (component and
+  keyword) and `SearchController` (search and usage).
+- Service-to-service dependencies: `ComponentService` uses `CategoryService` (existence check,
+  breadcrumb, descendants), `SearchService` uses `ComponentService` (category filter, result summary),
+  and every service that writes to the catalogue calls `AuditService.audit` inside its own transaction.
+- `AuditService.audit` receives the caller's transaction client, so it does not import Prisma. Every other
+  service imports the single `PrismaClient` and throws `AppError` for business errors.
+
+The services are **modules of exported functions**, not classes with state. They are drawn as
+`«service»` classes because the diagram shows what each module offers and what it depends on. The
+`+` operations are the exported functions.
+
+Notation management sits in its own `NotationService` (create and list), and reports and the audit
+log are both in `ReportService`.
 
 ## 5. Sequence diagrams
 
@@ -343,7 +244,7 @@ sequenceDiagram
     participant W as Web app
     participant API as SearchController
     participant S as SearchService
-    participant C as CategoryService
+    participant C as ComponentService
     participant DB as PostgreSQL
 
     U->>W: enter keywords, match, filters
@@ -354,8 +255,8 @@ sequenceDiagram
     else valid
         API->>S: search(dto, userId?)
         opt categoryId and includeDescendants
-            S->>C: descendantIds(categoryId)
-            C-->>S: category ids
+            S->>C: categoryFilter(categoryId, includeDescendants)
+            C-->>S: category ids (the category, plus its descendants if requested)
         end
         S->>DB: find components with keywords matching terms (equal or prefix) and filters
         DB-->>S: candidates with keywords
@@ -378,7 +279,7 @@ sequenceDiagram
 sequenceDiagram
     actor U as User
     participant W as Web app
-    participant API as ComponentController
+    participant API as SearchController
     participant S as UsageService
     participant DB as PostgreSQL
 
@@ -419,7 +320,6 @@ sequenceDiagram
     participant W as Web console
     participant API as ComponentController
     participant S as ComponentService
-    participant K as KeywordService
     participant DB as PostgreSQL
 
     C->>W: fill form, add keyword chips
@@ -427,7 +327,7 @@ sequenceDiagram
     API-->>W: suggestions
     C->>W: submit
     W->>API: POST /api/v1/components (Bearer JWT)
-    API->>API: authenticate, requireRole CATALOGUER, validate
+    API->>API: authenticate, requireCataloguer, parse body with zod (keywords trimmed, lowercased, de-duplicated)
     API->>S: create(dto, actor)
     S->>DB: load notation and category
     alt missing
@@ -436,11 +336,7 @@ sequenceDiagram
         S-->>API: NOTATION_KIND_MISMATCH
     else ok
         S->>DB: BEGIN transaction
-        S->>DB: insert Component
-        S->>K: normalise(keywords)
-        K-->>S: unique lowercase terms
-        S->>DB: upsert Keyword per term
-        S->>DB: insert ComponentKeyword rows
+        S->>DB: insert Component with its keywords (Keyword rows found or created per term, ComponentKeyword rows)
         S->>DB: insert AuditLog COMPONENT_CREATE
         S->>DB: COMMIT
         S-->>API: component with keywords

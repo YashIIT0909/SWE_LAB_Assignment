@@ -28,7 +28,7 @@ these phases (brief in `docs/ASSIGNMENT_CONTEXT.md`).
 | 1 | Walkthrough of the system (explained in chat, produces no file) | Not tracked here | - |
 | 2 | Get it running and demo-able: fixes and seed data | Done, CI green | `docs/CHANGELOG_MINE.md` |
 | 3 | SRS: functional and non-functional requirements from the real system | Done | `docs/01-SRS.md` |
-| 4 | UML: use case and class diagrams that match the code | To do | `docs/02-use-cases.md`, `docs/04-design.md` |
+| 4 | UML: use case and class diagrams that match the code (PlantUML) | Done | `docs/diagrams/`, `docs/02-use-cases.md`, `docs/04-design.md` |
 | 5 | PPT compared with the final code, SRS and UML | To do | outside the repo |
 | 6 | Viva preparation | To do | - |
 
