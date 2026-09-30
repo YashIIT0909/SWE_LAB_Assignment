@@ -4,6 +4,35 @@ Single source of truth for every Claude Code session on this repo. Read it fully
 anything. If code and this file disagree, fix the code or update this file in the same PR.
 Problem statement: `docs/00-problem-statement.md`. Requirements: `docs/01-SRS.md`.
 Full API examples: `docs/05-api.md`. Phase status: `docs/PROGRESS.md`.
+Assignment brief and working rules (read first): `docs/ASSIGNMENT_CONTEXT.md`.
+
+## Project context
+
+- Software Engineering course, **Assignment 8** (problem 8: Software Component Cataloguing).
+- Deliverables: **SRS (functional + non-functional requirements only)**, **UML use case and class
+  diagrams**, a **PPT**, and this **working website**. PPT, docs and code must match each other.
+- **Deadline: 1 Oct 2026** (late submissions penalised).
+- Team project built quickly with AI by teammates; Dinesh has taken over as the sole maintainer.
+- Real goal: Dinesh must understand everything end to end (requirements, architecture, code, backend
+  flow, diagrams) to answer the professor's viva questions. Marks come from explanation, not a rubric.
+- Priorities: (1) working local demo, (2) SRS, (3) UML, (4) PPT aligned to code, (5) explainability.
+  Dinesh deploys to Vercel; sessions focus on local running only.
+
+## Working rules
+
+1. Plan first: for any file change, show a plan and wait for approval. Never bulk-edit.
+2. Teach before touching: explain each change in 3-6 lines (what, why, how it connects).
+3. For every frontend piece, explain the request flow: UI event -> API call -> route -> controller ->
+   service -> DB -> response -> UI update, naming real files and functions.
+4. Ground claims in real code with file paths; say "I'm not sure" when guessing. Don't assume
+   teammates' code works: run it.
+5. Small steps: one task per commit with a readable diff; no unrelated refactors.
+6. Teach-back quizzes are paused until Dinesh asks for them.
+7. Name the SE concept when code illustrates one (FR/NFR, use cases, class relationships, layering,
+   SDLC, testing levels) and show the example in this repo.
+8. Compact, direct explanations; latest stable practices, but don't rewrite what works.
+9. Never print, log or commit `.env` values; use `.env.example`.
+10. Even on "just do it", give a 2-line summary of what changed and why.
 
 ## Summary
 
@@ -30,11 +59,21 @@ npm workspaces, Node 22 LTS (`"engines": {"node": ">=22"}`, `.nvmrc` = `22`; Nod
 Vitest/Prisma 7 need 22+).
 
 ```
-apps/api        Express + TypeScript, zod, Prisma (PostgreSQL on Supabase), Vitest + Supertest
-apps/web        Next.js App Router + TypeScript + Tailwind + shadcn/ui, TanStack Query,
-                Vitest + Testing Library, Playwright (e2e)
-packages/shared zod schemas and TS types used by both api and web
-docs/           SRS, use cases, analysis, design, API, test plan, project plan, PROGRESS.md
+apps/api        Express 5 + TypeScript, zod 4, Prisma 7 (@prisma/adapter-pg; PostgreSQL),
+                Vitest + Supertest
+  src/            app.ts (express app), index.ts (local server), serverless.ts (Vercel handler)
+  prisma/         schema.prisma, migrations/, seed.ts + seed-data.ts, prisma.config.ts (reads DIRECT_URL)
+  test/           *.int.test.ts integration tests, perf/ benchmark, globalSetup.ts (migrates test DB)
+  build.js        esbuild bundles src/serverless.ts -> api/index.js (committed, used by vercel.json)
+apps/web        Next.js 16 App Router + React 19 + TypeScript + Tailwind 4 + shadcn/ui, TanStack Query,
+                Playwright (e2e only; the web app has no unit tests)
+  app/            pages: /, /browse, /search, /components/[id], /login, /register, /console/*
+  lib/            api.ts (fetch wrapper, adds Bearer token), auth.tsx (token in localStorage),
+                  queries.ts (TanStack Query hooks)
+  e2e/            Playwright specs t41..t45
+packages/shared zod schemas and TS types used by both api and web (+ unit tests)
+docs/           SRS, use cases, analysis, design, API, test plan, project plan, report, PROGRESS.md,
+                ASSIGNMENT_CONTEXT.md
 ```
 
 Deployment: both apps on Vercel (web as a Next.js project, api as an Express serverless
@@ -45,8 +84,19 @@ auth stays in the API, no supabase-js). Prisma migrations run with `prisma migra
 
 `routes/` (Express routers, mount paths) -> `controllers/` (parse with zod, call a service, send
 response) -> `services/` (all business logic, the **only** place that imports Prisma) ->
-`lib/prisma.ts` (single PrismaClient). Plus `middleware/` (auth, requireRole, error handler,
-validate) and `errors.ts` (`AppError(code, status, message, details?)`).
+`lib/prisma.ts` (single PrismaClient). Plus `middleware/` and `errors.ts`
+(`AppError(code, status, message, details?)`, `notFound()`).
+
+- `middleware/auth.ts`: `authenticate` (global; decodes the Bearer token into `req.user` if present),
+  `requireLogin`, `requireRole(role)`, `requireCataloguer`.
+- `middleware/rateLimit.ts`: in-memory per-IP limiter, applied to auth routes only (20 requests per
+  15 min); skipped when `NODE_ENV=test`. State is per process, so it is not shared across serverless instances.
+- `middleware/errorHandler.ts`: `notFoundRoute` and `errorHandler` (maps `AppError` and zod errors to
+  the error shape below).
+- There is no separate validate middleware: controllers call `schema.parse(...)` on zod schemas from
+  `packages/shared`, and the error handler turns failures into `VALIDATION_ERROR`.
+- `app.ts` mounts the same router at `/api/v1` (canonical) and also at `/v1`, `/api` and `/` so the
+  Vercel rewrite works. CORS currently allows any origin (the origin callback always accepts).
 
 ## Conventions
 
@@ -63,10 +113,11 @@ validate) and `errors.ts` (`AppError(code, status, message, details?)`).
 - Request validation: zod schemas from `packages/shared`, never ad-hoc checks in controllers.
 - Thin controllers; logic in services; Prisma used only in services.
 - Auth: `Authorization: Bearer <JWT>` (HS256, `JWT_SECRET`, 1 day expiry, payload `{sub, role}`).
-  Passwords hashed with bcrypt (cost 10). Password min 8 chars.
+  Passwords hashed with bcrypt via `bcryptjs` (cost 10). Password min 8 chars.
 - Env vars documented in `.env.example` per app; real `.env` files are never committed.
 - Keywords are stored trimmed and lowercase; normalise in the shared zod schema.
-- Git: all work is committed directly on `main` (no phase branches); conventional commits
+- Git: all work is committed directly on `main` (no branches; single maintainer), one task per
+  commit, diff shown to Dinesh before committing; conventional commits
   (`feat:`, `fix:`, `docs:`, `test:`, `chore:`, `refactor:`, `ci:`).
 - Every phase keeps lint, typecheck and tests green and updates `docs/PROGRESS.md`.
 
@@ -177,14 +228,27 @@ page, pageSize, total}`.
 Run from the repo root unless noted. Local Postgres databases `sccs_dev` and `sccs_test`
 (URLs in `apps/api/.env`, copied from `.env.example`).
 
+First-time setup (verified 30 Sep 2026 on Node 22, Postgres 16):
+
 ```
-npm install                          # also runs prisma generate
-npm run dev                          # api :4000 and web :3000
-npm run lint | typecheck | test      # all workspaces
+cp apps/api/.env.example apps/api/.env        # BEFORE npm install: postinstall runs prisma generate,
+                                              # which fails if DIRECT_URL is unset
+cp apps/web/.env.example apps/web/.env.local  # NEXT_PUBLIC_API_URL
+# create DBs sccs_dev and sccs_test; if Postgres needs a password over TCP, put it in the URLs
+npm install                                   # also runs prisma generate
+npm run db:migrate -w @sccs/api               # or db:deploy to just apply existing migrations
+npm run db:seed -w @sccs/api                  # notations, cataloguer (SEED_CATALOGUER_*), demo data
+```
+
+Everyday:
+
+```
+npm run dev                          # api :4000 (tsx watch) and web :3000 (next dev)
+npm run lint | typecheck | test      # all workspaces (test = shared unit + api unit/integration w/ coverage)
 npm run format:check                 # prettier
-npm run db:migrate -w @sccs/api      # prisma migrate dev (dev DB)
-npm run db:seed -w @sccs/api         # seed notations, cataloguer, demo tree
+npm run test:e2e                     # Playwright; starts api :4000 and web :3001 itself; needs seeded DB
 npm run build -w @sccs/web
+npm run build -w @sccs/api           # prisma generate + esbuild serverless bundle
 ```
 
 Integration tests run against `DATABASE_URL_TEST` (vitest overrides `DATABASE_URL` with it).
