@@ -11,8 +11,9 @@ diagrams used in `docs/02-use-cases.md` and `docs/04-design.md`.
 
 ## Regenerate the images
 
-Needs Java and the PlantUML jar (https://plantuml.com/download). Graphviz is not required, because the
-class diagrams use PlantUML's built-in `smetana` layout.
+Needs Java, the PlantUML jar (https://plantuml.com/download) and Graphviz (`dot`), which PlantUML uses
+to lay out the diagrams. If `dot` is not on the PATH, set `GRAPHVIZ_DOT` to its full path first, for
+example `C:/Program Files/Graphviz/bin/dot.exe`.
 
 ```
 java -jar plantuml.jar -tpng -charset UTF-8 docs/diagrams/*.puml

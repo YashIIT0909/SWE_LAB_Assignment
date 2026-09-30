@@ -1,6 +1,5 @@
 @startuml class-backend
 title SCCS backend: layers and dependencies (apps/api/src)
-!pragma layout smetana
 skinparam shadowing false
 skinparam dpi 170
 skinparam classAttributeIconSize 0

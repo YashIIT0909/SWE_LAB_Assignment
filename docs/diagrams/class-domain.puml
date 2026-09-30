@@ -1,10 +1,8 @@
 @startuml class-domain
 title SCCS domain model (from apps/api/prisma/schema.prisma)
-!pragma layout smetana
 skinparam shadowing false
 skinparam dpi 170
 skinparam classAttributeIconSize 0
-skinparam linetype ortho
 hide empty methods
 
 enum Role <<enumeration>> {
