@@ -1,4 +1,5 @@
 @startuml class-domain
+!include sccs-theme.puml
 title SCCS domain model (from apps/api/prisma/schema.prisma)
 skinparam shadowing false
 skinparam dpi 170

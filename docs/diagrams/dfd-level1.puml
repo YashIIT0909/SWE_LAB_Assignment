@@ -1,0 +1,86 @@
+@startuml dfd-level1
+!include sccs-theme.puml
+title Data flow diagram, level 1
+skinparam nodesep 30
+skinparam ranksep 90
+skinparam rectangle<<entity>> {
+  BackgroundColor #FFF3D6
+  BorderColor #F4A62A
+}
+skinparam usecase {
+  BackgroundColor #E8F3F2
+  BorderColor #1F7A8C
+}
+skinparam database {
+  BackgroundColor #FFFFFF
+  BorderColor #0B3C49
+}
+rectangle "User / Visitor" as U <<entity>>
+rectangle "Cataloguer" as C <<entity>>
+
+usecase "1.0\nAuthenticate" as P1
+usecase "2.0\nMaintain components\nand keywords" as P2
+usecase "3.0\nMaintain categories\nand notations" as P3
+usecase "4.0\nSearch catalogue" as P4
+usecase "5.0\nRecord usage" as P5
+usecase "6.0\nBrowse catalogue" as P6
+usecase "7.0\nReport and purge" as P7
+
+database "D1 Users" as D1
+database "D2 Components" as D2
+database "D3 Keywords\nand links" as D3
+database "D4 Categories" as D4
+database "D5 Notations" as D5
+database "D6 Search log" as D6
+database "D7 Usage events" as D7
+database "D8 Audit log" as D8
+
+U --> P1 : registration,\ncredentials
+C --> P1 : credentials
+P1 <--> D1 : user record
+P1 --> U : token
+P1 --> C : token
+
+C --> P2 : component details,\nkeywords
+P2 --> D2 : component record
+P2 --> D3 : keyword terms, links
+D5 --> P2 : notation kind
+D4 --> P2 : category exists
+P2 --> D8 : audit entry
+
+C --> P3 : category,\nnotation details
+P3 <--> D4 : category record
+P3 <--> D5 : notation record
+P3 --> D2 : reassigned categoryId
+P3 --> D8 : audit entry
+
+U --> P4 : keywords,\nfilters, page
+D3 --> P4 : matching keywords
+D2 --> P4 : candidate components
+D4 --> P4 : descendant ids
+P4 --> D6 : query, results
+P4 --> D2 : hit counters +1
+P4 --> U : ranked results,\nqueryId
+
+U --> P5 : componentId,\nqueryId
+D6 --> P5 : result used flag
+P5 --> D6 : used = true
+P5 --> D2 : useCount, lastUsedAt,\nnot used -1
+P5 --> D7 : usage event
+P5 --> U : updated counters
+
+U --> P6 : categoryId,\nsort, page
+D4 --> P6 : tree, breadcrumb
+D2 --> P6 : components
+D3 --> P6 : keywords
+P6 --> U : tree, lists,\ndetails
+
+C --> P7 : criteria,\nselection
+D2 --> P7 : counters
+D6 --> P7 : search totals
+D7 --> P7 : usage totals
+D8 --> P7 : audit entries
+P7 --> D2 : delete purged
+P7 --> D8 : purge entries
+P7 --> C : report, candidates,\naudit
+@enduml

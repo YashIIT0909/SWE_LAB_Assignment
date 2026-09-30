@@ -1,0 +1,34 @@
+@startuml seq-search
+!include sccs-theme.puml
+title Search by keywords (UC-6)
+autonumber
+actor User
+participant "Web app" as W
+participant SearchController as SC
+participant SearchService as SS
+participant ComponentService as CS
+database PostgreSQL as DB
+
+User -> W : enter 1-10 keywords, any / all, filters
+W -> SC : POST /api/v1/search
+SC -> SC : parse body with zod
+alt invalid body
+  SC --> W : 400 VALIDATION_ERROR
+else valid body
+  SC -> SS : search(body, userId?)
+  opt a category filter is set
+    SS -> CS : categoryFilter(categoryId, includeDescendants)
+    CS -> DB : descendant category ids (recursive query)
+    CS --> SS : category ids
+  end
+  SS -> DB : find candidate components with their keywords
+  SS -> SS : score (exact keyword 2,\nprefix of 3+ letters 1),\napply any / all, order by score,\nuseCount, name, take the page
+  group one transaction
+    SS -> DB : insert SearchQuery and one\nSearchResult per page item
+    SS -> DB : hits +1 and hits not used +1\nfor each page item
+  end
+  SS --> SC : queryId, items, page, total
+  SC --> W : 200 JSON
+  W --> User : ranked results with score\nand matched keywords
+end
+@enduml

@@ -1,0 +1,59 @@
+' Shared look for every SCCS diagram: teal and amber palette, transparent background.
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Calibri
+skinparam defaultFontColor #10262B
+skinparam shadowing false
+skinparam dpi 170
+skinparam roundcorner 12
+skinparam ArrowColor #0B3C49
+skinparam ArrowFontColor #10262B
+skinparam titleFontColor #0B3C49
+skinparam titleFontSize 22
+skinparam class {
+  BackgroundColor #E8F3F2
+  BorderColor #1F7A8C
+  FontColor #10262B
+  AttributeFontColor #10262B
+  StereotypeFontColor #5A7177
+}
+skinparam enum {
+  BackgroundColor #FFF3D6
+  BorderColor #F4A62A
+}
+skinparam note {
+  BackgroundColor #FFF3D6
+  BorderColor #F4A62A
+  FontColor #10262B
+}
+skinparam package {
+  BorderColor #1F7A8C
+  FontColor #0B3C49
+  BackgroundColor transparent
+}
+skinparam rectangle {
+  BorderColor #1F7A8C
+  FontColor #0B3C49
+  BackgroundColor transparent
+}
+skinparam usecase {
+  BackgroundColor #E8F3F2
+  BorderColor #1F7A8C
+  ArrowColor #0B3C49
+}
+skinparam actor {
+  BackgroundColor #F4A62A
+  BorderColor #0B3C49
+  FontColor #10262B
+}
+skinparam participant {
+  BackgroundColor #E8F3F2
+  BorderColor #1F7A8C
+  FontColor #10262B
+}
+skinparam sequence {
+  LifeLineBorderColor #1F7A8C
+  LifeLineBackgroundColor #E8F3F2
+  GroupBorderColor #1F7A8C
+  GroupBackgroundColor #FFFFFF
+  BoxBorderColor #1F7A8C
+}

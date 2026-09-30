@@ -1,0 +1,34 @@
+@startuml seq-add
+!include sccs-theme.puml
+title Add a component with keywords (UC-2, UC-5)
+autonumber
+actor Cataloguer
+participant "Web console" as W
+participant ComponentController as C
+participant ComponentService as S
+database PostgreSQL as DB
+
+Cataloguer -> W : fill the form, add keyword chips
+Cataloguer -> W : submit
+W -> C : POST /api/v1/components (Bearer token)
+C -> C : authenticate, requireCataloguer,\nparse body with zod\n(keywords trimmed, lowercased)
+alt not logged in, not a cataloguer, or invalid body
+  C --> W : 401 / 403 / 400 VALIDATION_ERROR
+else valid request
+  C -> S : create(dto, actorId)
+  S -> DB : check that the notation exists and its kind\nmatches the component kind; check the category exists
+  alt notation kind differs, or notation or category unknown
+    S --> C : NOTATION_KIND_MISMATCH (422) or NOT_FOUND (404)
+    C --> W : error message
+  else checks pass
+    group one transaction
+      S -> DB : insert Component with its keywords\n(Keyword rows found or created, ComponentKeyword rows)
+      S -> DB : insert AuditLog COMPONENT_CREATE
+    end
+    S --> C : component with keywords
+    C --> W : 201 Created
+    W --> Cataloguer : component detail page
+  end
+end
+note over W : Keyword suggestions while typing come from\nGET /keywords?prefix=...
+@enduml

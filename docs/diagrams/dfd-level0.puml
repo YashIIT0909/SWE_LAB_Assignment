@@ -1,0 +1,21 @@
+@startuml dfd-level0
+!include sccs-theme.puml
+title Data flow diagram, level 0 (context)
+left to right direction
+skinparam rectangle<<entity>> {
+  BackgroundColor #FFF3D6
+  BorderColor #F4A62A
+}
+skinparam usecase {
+  BackgroundColor #E8F3F2
+  BorderColor #1F7A8C
+}
+rectangle "User / Visitor" as U <<entity>>
+rectangle "Cataloguer" as C <<entity>>
+usecase "0\nSoftware Component\nCataloguing System" as P0
+
+U --> P0 : registration, credentials\nsearch keywords, filters\nbrowse request\nuse notification
+P0 --> U : token, profile\nranked results, queryId\ncategory tree, component details
+C --> P0 : credentials\ncomponent details, keywords\ncategory and notation details\nreport and purge criteria\npurge selection
+P0 --> C : confirmations, errors\nusage report, purge candidates\naudit log
+@enduml

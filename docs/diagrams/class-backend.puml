@@ -1,4 +1,5 @@
 @startuml class-backend
+!include sccs-theme.puml
 title SCCS backend: layers and dependencies (apps/api/src)
 skinparam shadowing false
 skinparam dpi 170

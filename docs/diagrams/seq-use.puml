@@ -1,0 +1,29 @@
+@startuml seq-use
+!include sccs-theme.puml
+title Use a component (UC-7)
+autonumber
+actor User
+participant "Web app" as W
+participant SearchController as SC
+participant UsageService as US
+database PostgreSQL as DB
+
+User -> W : press "Use this component"
+W -> SC : POST /api/v1/components/:id/use\n{queryId} (Bearer token)
+SC -> SC : authenticate, requireLogin
+alt no valid token
+  SC --> W : 401 UNAUTHENTICATED
+else logged in
+  SC -> US : use(componentId, userId, queryId?)
+  group one transaction
+    US -> DB : find the component (404 if missing)
+    US -> DB : if the result of that search is not yet used:\nmark it used and hits not used -1\n(never below 0)
+    US -> DB : useCount +1, lastUsedAt = now
+    US -> DB : insert UsageEvent
+  end
+  US --> SC : updated counters
+  SC --> W : 200 counters
+  W --> User : confirmation, content revealed
+end
+note over SC : The use route is declared with the components routes,\nits handler lives in the search controller.
+@enduml
