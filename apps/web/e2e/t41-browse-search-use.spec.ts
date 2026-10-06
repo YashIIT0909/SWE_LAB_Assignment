@@ -15,6 +15,12 @@ test.describe('T-41 End-to-end browse, search and use journey', () => {
     await page.fill('#password', 'password123')
     await page.click('button[type="submit"]')
 
+    // Redirected to login, then sign in
+    await expect(page).toHaveURL(/\/login/)
+    await page.fill('#email', email)
+    await page.fill('#password', 'password123')
+    await page.click('button[type="submit"]')
+
     // Verify logged in
     await expect(page.locator('nav[aria-label="Main"]')).toContainText(name)
 

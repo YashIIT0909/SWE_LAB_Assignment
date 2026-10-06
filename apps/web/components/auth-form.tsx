@@ -24,6 +24,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
       return api<AuthResult>(`/auth/${mode}`, { method: 'POST', json: body })
     },
     onSuccess: (r) => {
+      if (mode === 'register') return router.push('/login')
       signIn(r)
       router.push(next.startsWith('/') ? next : '/')
     },
@@ -39,6 +40,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
       <CardContent>
         <form
           className="space-y-4"
+          noValidate
           onSubmit={(e) => {
             e.preventDefault()
             submit.mutate(new FormData(e.currentTarget))

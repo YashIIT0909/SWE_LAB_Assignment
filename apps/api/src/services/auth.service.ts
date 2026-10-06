@@ -36,8 +36,9 @@ export async function register(dto: RegisterBody) {
 
 export async function login(dto: LoginBody) {
   const found = await prisma.user.findUnique({ where: { email: dto.email } })
-  if (!found || !(await bcrypt.compare(dto.password, found.passwordHash)))
-    throw new AppError('INVALID_CREDENTIALS', 401, 'Email or password is incorrect')
+  if (!found) throw new AppError('INVALID_CREDENTIALS', 401, 'No account found for this email')
+  if (!(await bcrypt.compare(dto.password, found.passwordHash)))
+    throw new AppError('INVALID_CREDENTIALS', 401, 'Incorrect password')
   const { passwordHash, ...user } = found
   return { token: sign(user), user }
 }
