@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import bcrypt from 'bcryptjs'
 import { prisma } from '../src/lib/prisma'
+import { CONTENT } from './seed-content'
 import { linkKeywords } from '../src/services/component.service'
 import { DEMO_COMPONENTS, NOTATIONS, STALE_DEMO_AGE_DAYS, STALE_DEMO_COMPONENTS } from './seed-data'
 import { slugify } from '@sccs/shared'
@@ -47,12 +48,19 @@ async function main() {
   ) {
     for (const [name, kind, notation, cat, keywords, description] of list) {
       const existing = await prisma.component.findFirst({ where: { name } })
+      if (existing && !existing.content && CONTENT[name]) {
+        await prisma.component.update({
+          where: { id: existing.id },
+          data: { content: CONTENT[name] },
+        })
+      }
       if (!existing) {
         await prisma.component.create({
           data: {
             name,
             kind,
             description,
+            content: CONTENT[name],
             notationId: notations.get(notation)!,
             categoryId: cats.get(cat)!,
             createdById: cataloguer.id,
