@@ -5,47 +5,37 @@ how they fit together.
 
 ## 1. Architecture
 
-```mermaid
-flowchart LR
-    B["Browser"]
-    subgraph vercel["Vercel"]
-        W["Next.js web app (apps/web) - App Router, TanStack Query"]
-        A["Express API (apps/api) - serverless function, /api/v1"]
-    end
-    N[("Supabase PostgreSQL")]
+**System flow:**
+- Browser calls **Next.js web app** (Vercel) for pages and assets over HTTPS
+- Browser calls **Express API** (Vercel) directly for authenticated requests (Bearer JWT in header, stored in `localStorage`)
+- Next.js server components can fetch public read endpoints from the API for SSR
+- API connects to **Supabase PostgreSQL** via Prisma over TLS (pooled connection at runtime for speed, direct connection for migrations)
 
-    B -- "HTTPS: pages, assets" --> W
-    B -- "HTTPS JSON + Bearer JWT" --> A
-    W -. "server components fetch (public reads)" .-> A
-    A -- "Prisma over TLS (pooled connection)" --> N
-```
-
-- The browser calls the API directly for authenticated and mutating requests (token kept in
-  memory + `localStorage`); Next.js server components may call public read endpoints for SSR.
-- CORS on the API allows the origins in `WEB_ORIGIN`, `http://localhost:*` and `*.vercel.app` (everything if
-  `WEB_ORIGIN` is unset or contains `*`); other browsers' origins get no CORS headers.
-- Supabase's pooled connection string (`DATABASE_URL`, Supavisor port 6543 with
-  `?pgbouncer=true`) is used at runtime; the direct string (port 5432)
-  (`DIRECT_URL`) is used by `prisma migrate`.
-- `packages/shared` is compiled into both apps: zod schemas are the single definition of
-  request shapes, and the web forms reuse them for client-side validation.
+**Security & deployment:**
+- CORS on the API allows origins in `WEB_ORIGIN`, `http://localhost:*`, and `*.vercel.app` (all origins if `WEB_ORIGIN` unset or contains `*`)
+- `packages/shared` is compiled into both apps: zod schemas validate request shapes in controllers and client-side form validation
 
 ## 2. Layered backend design
 
-```mermaid
-flowchart TB
-    R["Routes - routers per resource, mount under /api/v1"]
-    MW["Middleware - json, cors, authenticate, requireLogin / requireCataloguer, rateLimit, errorHandler"]
-    C["Controllers - parse dto with shared zod schema, call service, shape response"]
-    S["Services - business rules, transactions, counters, audit"]
-    P["Prisma client (lib/prisma.ts)"]
-    DB[("PostgreSQL")]
-    SH["packages/shared - zod schemas, types, constants"]
+**Request flow (layered architecture):**
 
-    R --> MW --> C --> S --> P --> DB
-    C -. "imports" .-> SH
-    S -. "imports types" .-> SH
 ```
+HTTP Request
+    ↓
+Routes (attach middleware chain)
+    ↓
+Middleware (authenticate JWT, check role, rate limit, error handling)
+    ↓
+Controllers (parse request with Zod schema, call service, return JSON)
+    ↓
+Services (all business logic: search ranking, counter updates, transactions, audit)
+    ↓
+Prisma (type-safe database access)
+    ↓
+PostgreSQL (persistence)
+```
+
+All layers share validation schemas and types from `packages/shared`.
 
 | Layer | Responsibility | May import |
 |---|---|---|
@@ -236,202 +226,95 @@ log are both in `ReportService`.
 
 ## 5. Sequence diagrams
 
-### 5.1 Keyword search
+See `diagrams/` folder for full PlantUML sequence diagrams (PNG and SVG):
 
-```mermaid
-sequenceDiagram
-    actor U as User
-    participant W as Web app
-    participant API as SearchController
-    participant S as SearchService
-    participant C as ComponentService
-    participant DB as PostgreSQL
+### 5.1 Keyword search (`seq-search.puml`)
 
-    U->>W: enter keywords, match, filters
-    W->>API: POST /api/v1/search
-    API->>API: validate body with shared zod schema
-    alt invalid
-        API-->>W: 400 VALIDATION_ERROR
-    else valid
-        API->>S: search(dto, userId?)
-        opt categoryId and includeDescendants
-            S->>C: categoryFilter(categoryId, includeDescendants)
-            C-->>S: category ids (the category, plus its descendants if requested)
-        end
-        S->>DB: find components with keywords matching terms (equal or prefix) and filters
-        DB-->>S: candidates with keywords
-        S->>S: score, filter by match mode, order by score, useCount, name
-        S->>S: slice requested page
-        S->>DB: BEGIN transaction
-        S->>DB: insert SearchQuery(terms, filters, resultCount)
-        S->>DB: insert SearchResult per page item (rank)
-        S->>DB: update page components set queryHitCount+1, queryHitNotUsedCount+1
-        S->>DB: COMMIT
-        S-->>API: queryId, items, page, pageSize, total
-        API-->>W: 200 JSON
-        W-->>U: ranked results with matched keywords
-    end
-```
+**Flow:**
+- User enters keywords, match mode, and optional filters
+- Web app calls `POST /search` with Zod-validated request
+- SearchController calls SearchService
+- SearchService validates, filters by category/kind/notation, ranks components by keyword match
+- For each component on the returned page: increments counters (queryHitCount, queryHitNotUsedCount), creates SearchResult row
+- All counter updates in one Prisma transaction
+- Returns paginated results with rank and matched keywords
 
-### 5.2 Use component
+### 5.2 Use component (`seq-use.puml`)
 
-```mermaid
-sequenceDiagram
-    actor U as User
-    participant W as Web app
-    participant API as SearchController
-    participant S as UsageService
-    participant DB as PostgreSQL
+**Flow:**
+- User clicks "Use this component" on a search result or detail page (requires login)
+- Web app sends `POST /components/:id/use` with optional queryId
+- Backend middleware authenticates JWT token
+- UsageService increments useCount, sets lastUsedAt, creates UsageEvent
+- If queryId provided and SearchResult exists for this component: sets used=true and decrements queryHitNotUsedCount
+- All changes in one transaction
+- Returns updated counters
 
-    U->>W: click Use this component
-    W->>API: POST /api/v1/components/ID/use with queryId (Bearer JWT)
-    API->>API: authenticate
-    alt no or invalid token
-        API-->>W: 401 UNAUTHENTICATED
-    else logged in
-        API->>S: use(componentId, userId, queryId?)
-        S->>DB: BEGIN transaction
-        S->>DB: find component
-        alt not found
-            S-->>API: NOT_FOUND
-            API-->>W: 404
-        else found
-            opt queryId given
-                S->>DB: update SearchResult set used=true where queryId, componentId, used=false
-                alt one row updated
-                    S->>DB: decrement queryHitNotUsedCount where value > 0
-                end
-            end
-            S->>DB: update component useCount+1, lastUsedAt=now
-            S->>DB: insert UsageEvent(componentId, userId, queryId)
-            S->>DB: COMMIT
-            S-->>API: counters
-            API-->>W: 200 counters
-            W-->>U: confirmation, show content
-        end
-    end
-```
+### 5.3 Add component with keywords (`seq-add.puml`)
 
-### 5.3 Add component with keywords
+**Flow:**
+- Cataloguer fills component form (name, description, kind, notation, category, version, keywords)
+- Web console calls keyword autocomplete endpoint for suggestions
+- On submit: `POST /components` with Zod-validated body
+- Middleware checks authentication + requires CATALOGUER role
+- ComponentService loads notation and category, validates kind matches
+- Creates Component row, finds/creates Keyword rows, links via ComponentKeyword
+- Creates AuditLog entry COMPONENT_CREATE
+- All in one transaction
+- Returns component detail
 
-```mermaid
-sequenceDiagram
-    actor C as Cataloguer
-    participant W as Web console
-    participant API as ComponentController
-    participant S as ComponentService
-    participant DB as PostgreSQL
+### 5.4 Purge (`seq-purge.puml`)
 
-    C->>W: fill form, add keyword chips
-    W->>API: GET /api/v1/keywords?prefix=...
-    API-->>W: suggestions
-    C->>W: submit
-    W->>API: POST /api/v1/components (Bearer JWT)
-    API->>API: authenticate, requireCataloguer, parse body with zod (keywords trimmed, lowercased, de-duplicated)
-    API->>S: create(dto, actor)
-    S->>DB: load notation and category
-    alt missing
-        S-->>API: NOT_FOUND
-    else notation.kind differs from dto.kind
-        S-->>API: NOTATION_KIND_MISMATCH
-    else ok
-        S->>DB: BEGIN transaction
-        S->>DB: insert Component with its keywords (Keyword rows found or created per term, ComponentKeyword rows)
-        S->>DB: insert AuditLog COMPONENT_CREATE
-        S->>DB: COMMIT
-        S-->>API: component with keywords
-        API-->>W: 201 Created
-        W-->>C: detail page
-    end
-```
+**Flow:**
+- Cataloguer opens purge tool and sets criteria (maxUses, minNotUsedHits, unusedForDays, olderThanDays)
+- Web console calls `GET /reports/purge-candidates?...params...`
+- ReportService queries components matching all criteria
+- Shows candidates to the cataloguer for review
+- Cataloguer selects components and confirms purge
+- Web console calls `POST /reports/purge` with selected componentIds and params
+- ReportService re-checks criteria server-side (snapshot attack prevention)
+- Deletes matching components (cascades to keywords, results, usage events)
+- Creates one AuditLog entry per deletion with COMPONENT_PURGE action
+- All in one transaction
+- Returns list of deleted and skipped component IDs
 
-### 5.4 Purge
-
-```mermaid
-sequenceDiagram
-    actor C as Cataloguer
-    participant W as Web console
-    participant API as ReportController
-    participant S as ReportService
-    participant DB as PostgreSQL
-
-    C->>W: set criteria
-    W->>API: GET /api/v1/reports/purge-candidates?maxUses=0&unusedForDays=90
-    API->>S: purgeCandidates(params)
-    S->>DB: select components matching criteria
-    DB-->>S: rows
-    S-->>API: candidates
-    API-->>W: 200 list
-    C->>W: select ids and confirm
-    W->>API: POST /api/v1/reports/purge with componentIds and params
-    API->>S: purge(ids, params, actor)
-    S->>DB: BEGIN transaction
-    S->>DB: select ids that still match criteria
-    S->>DB: delete those components (cascade links, results, events)
-    S->>DB: insert AuditLog COMPONENT_PURGE per deleted id
-    S->>DB: COMMIT
-    S-->>API: deleted ids, skipped ids
-    API-->>W: 200 result
-    W-->>C: summary of purge
-```
-
-## 6. Component lifecycle (state diagram)
+## 6. Component lifecycle
 
 The state is derived from counters and purge criteria; it is not stored as a column.
 
-```mermaid
-stateDiagram-v2
-    [*] --> Catalogued : cataloguer adds
-    Catalogued --> Retrieved : shown in search results
-    Retrieved --> Retrieved : shown again
-    Retrieved --> Used : user marks used
-    Catalogued --> Used : used from browse
-    Used --> Used : used again
-    Used --> Retrieved : shown in later search
-    Catalogued --> PurgeCandidate : meets purge criteria
-    Retrieved --> PurgeCandidate : meets purge criteria
-    Used --> PurgeCandidate : unused for too long
-    PurgeCandidate --> Used : used before purge
-    PurgeCandidate --> Deleted : cataloguer purges
-    Catalogued --> Deleted : cataloguer deletes
-    Retrieved --> Deleted : cataloguer deletes
-    Used --> Deleted : cataloguer deletes
-    Deleted --> [*]
+**States:**
+- **Catalogued:** Component added by cataloguer, never appeared in search or used
+- **Retrieved:** Component appeared in at least one search (queryHitCount > 0)
+- **Used:** Component marked as used at least once (useCount > 0)
+- **PurgeCandidate:** Matches all purge criteria (useCount ≤ maxUses, queryHitNotUsedCount ≥ minNotUsedHits, lastUsedAt is null or older than unusedForDays, createdAt older than olderThanDays)
+- **Deleted:** Component was deleted by cataloguer or purged
 
-    state "Purge candidate" as PurgeCandidate
-```
+**Transitions:**
+- Catalogued → Retrieved: component shown in a search
+- Retrieved → Used: user marks it used from search result
+- Catalogued → Used: user marks it used from browse/detail page (no prior search)
+- Any state → PurgeCandidate: criteria met during purge check
+- PurgeCandidate → Used: component used before purge is executed (transitions back to Used)
+- Any state → Deleted: cataloguer manually deletes it, or purge is executed on PurgeCandidate
 
-## 7. Activity diagram — cataloguing a component
+## 7. Activity — Cataloguing a component (UC-2 and UC-5)
 
-```mermaid
-flowchart TD
-    start(("Start"))
-    login{"Logged in as cataloguer?"}
-    doLogin["Log in"]
-    open["Open New component form"]
-    kind["Choose kind: Design or Code"]
-    notation["Pick notation filtered by kind"]
-    catExists{"Suitable category exists?"}
-    newCat["Create category (UC-9)"]
-    pickCat["Pick category"]
-    details["Enter name, description, version, author, source URL, content"]
-    kw["Add keywords with autocomplete"]
-    submit["Submit"]
-    valid{"Input valid and notation kind matches?"}
-    showErr["Show errors"]
-    save["Save component, keywords and audit entry in one transaction"]
-    detail["Show component detail"]
-    more{"Catalogue another?"}
-    stop(("End"))
-
-    start --> login
-    login -- "no" --> doLogin --> login
-    login -- "yes" --> open --> kind --> notation --> catExists
-    catExists -- "no" --> newCat --> pickCat
-    catExists -- "yes" --> pickCat
-    pickCat --> details --> kw --> submit --> valid
-    valid -- "no" --> showErr --> details
-    valid -- "yes" --> save --> detail --> more
-    more -- "yes" --> open
-    more -- "no" --> stop
-```
+**Steps:**
+1. Check login: if not logged in as cataloguer, log in first
+2. Open new component form
+3. Choose kind: Design or Code
+4. Pick notation filtered by kind (notation.kind must equal component.kind)
+5. Check if suitable category exists:
+   - If no: create a new category (see UC-9) and pick it
+   - If yes: pick the existing category
+6. Enter component details (name, description, version, author, source URL, content)
+7. Add keywords using autocomplete suggestions (keywords stored trimmed, lowercase, unique)
+8. Submit form
+9. Validate:
+   - If invalid: show errors, user returns to step 6
+   - If valid and notation.kind matches component.kind: proceed
+10. Save component, all keywords, and audit entry in **one transaction**
+11. Show component detail page
+12. Ask if cataloguing another:
+    - If yes: return to step 2
+    - If no: end
