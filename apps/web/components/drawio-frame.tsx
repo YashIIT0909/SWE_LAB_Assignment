@@ -12,10 +12,13 @@ export function DrawioFrame({
   xml,
   mode,
   className,
+  merge,
 }: {
   xml: string
   mode: keyof typeof OPTIONS
   className?: string
+  /** Bump `key` to merge another diagram's XML onto the open canvas. */
+  merge?: { xml: string; key: number }
 }) {
   const frame = useRef<HTMLIFrameElement>(null)
 
@@ -32,6 +35,15 @@ export function DrawioFrame({
     window.addEventListener('message', onMessage)
     return () => window.removeEventListener('message', onMessage)
   }, [xml])
+
+  useEffect(() => {
+    if (merge)
+      frame.current?.contentWindow?.postMessage(
+        JSON.stringify({ action: 'merge', xml: merge.xml }),
+        ORIGIN,
+      )
+    // only when a new merge is requested
+  }, [merge?.key])
 
   return (
     <iframe
