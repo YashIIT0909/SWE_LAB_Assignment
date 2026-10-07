@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { CodeTemplate } from '@/components/code-template'
+import { DiagramPanel } from '@/components/diagram-panel'
 import { Breadcrumb } from '@/components/breadcrumb'
 import { DeleteComponentButton } from '@/components/delete-component-button'
 import { FormError } from '@/components/form-error'
@@ -90,7 +91,11 @@ function ComponentPage() {
           </dd>
         </dl>
       </div>
-      <CodeTemplate content={c.content} />
+      {c.kind === 'DESIGN' ? (
+        <DiagramPanel id={c.id} content={c.content} />
+      ) : (
+        <CodeTemplate content={c.content} />
+      )}
     </article>
   )
 }
