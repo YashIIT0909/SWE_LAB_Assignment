@@ -1,9 +1,12 @@
 'use client'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { DrawioFrame } from '@/components/drawio-frame'
 import { FormError } from '@/components/form-error'
+import { Button } from '@/components/ui/button'
+import { useAuth } from '@/lib/auth'
 import { RequireRole } from '@/components/require-role'
 import { Select } from '@/components/select'
 import { api } from '@/lib/api'
@@ -16,6 +19,14 @@ function Editor() {
   const { data: designs } = useComponentPage('/components?kind=DESIGN&pageSize=50')
   const [merge, setMerge] = useState<{ xml: string; key: number }>()
   const [failed, setFailed] = useState(false)
+  const [saveKey, setSaveKey] = useState(0)
+  const { user } = useAuth()
+  const qc = useQueryClient()
+  const save = useMutation({
+    mutationFn: (content: string) =>
+      api(`/components/${id}`, { method: 'PATCH', json: { content } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['components'] }),
+  })
 
   async function add(otherId: string) {
     if (!otherId) return
@@ -51,12 +62,20 @@ function Editor() {
               </option>
             ))}
         </Select>
+        {user?.role === 'CATALOGUER' && (
+          <Button size="sm" disabled={save.isPending} onClick={() => setSaveKey((k) => k + 1)}>
+            {save.isPending ? 'Saving…' : 'Save to catalogue'}
+          </Button>
+        )}
+        {save.isSuccess && <span className="text-sm text-muted-foreground">Saved.</span>}
+        {save.isError && <span className="text-sm text-destructive">Could not save.</span>}
         {failed && <span className="text-sm text-destructive">Could not add that component.</span>}
       </div>
       <DrawioFrame
         xml={c.content ?? ''}
         mode="editor"
         merge={merge}
+        save={{ key: saveKey, onXml: save.mutate }}
         className="h-[calc(100vh-10rem)] w-full rounded-lg border"
       />
     </div>

@@ -13,19 +13,25 @@ export function DrawioFrame({
   mode,
   className,
   merge,
+  save,
 }: {
   xml: string
   mode: keyof typeof OPTIONS
   className?: string
   /** Bump `key` to merge another diagram's XML onto the open canvas. */
   merge?: { xml: string; key: number }
+  /** Bump `key` to export the canvas as XML and hand it to `onXml`. */
+  save?: { key: number; onXml: (xml: string) => void }
 }) {
   const frame = useRef<HTMLIFrameElement>(null)
+  const onXml = useRef(save?.onXml)
+  onXml.current = save?.onXml
 
   useEffect(() => {
     function onMessage(e: MessageEvent) {
       if (e.origin !== ORIGIN || e.source !== frame.current?.contentWindow) return
-      const msg = JSON.parse(e.data as string) as { event?: string }
+      const msg = JSON.parse(e.data as string) as { event?: string; data?: string }
+      if (msg.event === 'export' && msg.data) onXml.current?.(msg.data)
       if (msg.event === 'init')
         frame.current?.contentWindow?.postMessage(
           JSON.stringify({ action: 'load', xml, autosave: 0 }),
@@ -44,6 +50,14 @@ export function DrawioFrame({
       )
     // only when a new merge is requested
   }, [merge?.key])
+
+  useEffect(() => {
+    if (save?.key)
+      frame.current?.contentWindow?.postMessage(
+        JSON.stringify({ action: 'export', format: 'xml' }),
+        ORIGIN,
+      )
+  }, [save?.key])
 
   return (
     <iframe

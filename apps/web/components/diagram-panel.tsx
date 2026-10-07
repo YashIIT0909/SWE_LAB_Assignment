@@ -12,7 +12,7 @@ export function DiagramPanel({ id, content }: { id: string; content: string | nu
     <aside aria-label="Diagram" className="space-y-2 lg:sticky lg:top-4 lg:self-start">
       <div className="flex items-center justify-between">
         <h2 className="font-medium">Diagram</h2>
-        {user && content && (
+        {user && (content || user.role === 'CATALOGUER') && (
           <Link href={`/components/${id}/editor`} className={buttonVariants({ size: 'sm' })}>
             Open in canvas
           </Link>
