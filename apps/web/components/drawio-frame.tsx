@@ -30,8 +30,8 @@ export function DrawioFrame({
   useEffect(() => {
     function onMessage(e: MessageEvent) {
       if (e.origin !== ORIGIN || e.source !== frame.current?.contentWindow) return
-      const msg = JSON.parse(e.data as string) as { event?: string; data?: string }
-      if (msg.event === 'export' && msg.data) onXml.current?.(msg.data)
+      const msg = JSON.parse(e.data as string) as { event?: string; xml?: string }
+      if (msg.event === 'export' && msg.xml) onXml.current?.(msg.xml)
       if (msg.event === 'init')
         frame.current?.contentWindow?.postMessage(
           JSON.stringify({ action: 'load', xml, autosave: 0 }),
