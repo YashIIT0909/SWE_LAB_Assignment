@@ -14,46 +14,6 @@ export const NOTATIONS = [
 /** [name, kind, notation, category, keywords, description] */
 export const DEMO_COMPONENTS = [
   [
-    'Observer pattern class diagram',
-    'DESIGN',
-    'UML',
-    'Behavioural patterns',
-    ['observer', 'event', 'publish-subscribe'],
-    'UML class diagram of the Observer pattern with Subject and Observer interfaces.',
-  ],
-  [
-    'Strategy pattern class diagram',
-    'DESIGN',
-    'UML',
-    'Behavioural patterns',
-    ['strategy', 'algorithm', 'polymorphism'],
-    'Interchangeable algorithms behind a common Strategy interface.',
-  ],
-  [
-    'Singleton in Java',
-    'CODE',
-    'Java',
-    'Creational patterns',
-    ['singleton', 'lazy', 'thread-safe'],
-    'Thread-safe lazily initialised singleton using the holder idiom.',
-  ],
-  [
-    'Builder in TypeScript',
-    'CODE',
-    'TypeScript',
-    'Creational patterns',
-    ['builder', 'fluent', 'immutable'],
-    'Fluent builder producing immutable objects.',
-  ],
-  [
-    'Adapter pattern class diagram',
-    'DESIGN',
-    'UML',
-    'Structural patterns',
-    ['adapter', 'wrapper', 'interface'],
-    'Object adapter converting one interface into another.',
-  ],
-  [
     'CSV parser',
     'CODE',
     'Python',
